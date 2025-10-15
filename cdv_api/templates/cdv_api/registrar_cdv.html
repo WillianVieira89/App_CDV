@@ -1,0 +1,560 @@
+{% extends 'cdv_api/base.html' %}
+{% load static %}
+
+{% block title %}Registrar Dados do CDV{% endblock %}
+
+{% block content %}
+<h1>Registrar Dados do CDV — Estação <span id="nome_estacao">{{ estacao_nome }}</span></h1>
+<p class="mt-3"><a href="{% url 'index' %}">&laquo; Seleção de Estação</a></p>
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<!-- Data da coleta (oculta; troque "hidden" por nada se quiser exibir) -->
+<input type="date" id="data_coleta" hidden>
+
+<style>
+  .scroll-select { width: 100%; max-width: 360px; }
+  .btn-green  { background:#28a745; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+  .btn-red    { background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+  .btn-blue   { background:#007bff; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+  .btn-gray   { background:#6c757d; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+  table { width:100%; border-collapse: collapse; margin: 10px 0 24px; }
+  th, td { border:1px solid #ddd; padding:6px 8px; }
+  thead th { background:#f7f7f7; }
+  .mt-2{margin-top:8px;} .mt-3{margin-top:12px;} .mt-4{margin-top:16px;}
+  label { display:inline-block; margin-top:6px; }
+</style>
+
+<div class="conteudo-principal">
+
+  <!-- ===================== TRANSMISSOR ===================== -->
+  <div id="transmissores-container" class="mt-3">
+    <h2>Transmissor</h2>
+    <div class="transmissor-bloco">
+
+      <!-- Circuito (TX) -->
+      <label for="num_circuito_tx_1">Circuito:</label>
+      <select id="num_circuito_tx_1" name="num_circuito_tx[]" required class="scroll-select">
+        <option value="">Selecione...</option>
+      </select><br>
+
+      <label for="num_transmissor_1">TX:</label>
+      <input type="number" id="num_transmissor_1" name="num_transmissor[]"><br>
+
+      <label for="vout_1">VOUT:</label>
+      <input type="number" step="0.01" id="vout_1" name="vout[]"><br>
+
+      <label for="pout_1">POUT:</label>
+      <input type="number" step="0.01" id="pout_1" name="pout[]"><br>
+
+      <label for="tap_1">TAP:</label>
+      <input type="number" id="tap_1" name="tap[]"><br>
+
+      <label for="tipo_transmissor_1">Transmissor:</label>
+      <select id="tipo_transmissor_1" name="tipo_transmissor[]">
+        <option value="0R">0R</option>
+        <option value="48R">48R</option>
+      </select><br>
+
+      <label for="tipo_manutencao_tx_1">Tipo de Manutenção:</label>
+      <select id="tipo_manutencao_tx_1" name="tipo_manutencao_tx_1[]">
+        <option value="Preventiva">Preventiva</option>
+        <option value="Corretiva">Corretiva</option>
+        <option value="Check-List">Checklist</option>
+      </select><br>
+
+      <label for="horario_coleta_tx_1">Horário da Coleta (HH:MM):</label>
+      <input type="time" id="horario_coleta_tx_1" name="horario_coleta_tx[]" step="60" required><br><br>
+
+      <button type="button" class="btn-blue" onclick="adicionarTransmissor()">Adicionar Transmissor</button>
+    </div>
+  </div>
+
+  <!-- ===================== RECEPTOR ===================== -->
+  <div id="receptores-container" class="mt-4">
+    <h2>Receptor</h2>
+    <div class="receptor-bloco">
+
+      <!-- Circuito (RX) -->
+      <label for="num_circuito_rx_1">Circuito:</label>
+      <select id="num_circuito_rx_1" name="num_circuito_rx[]" required class="scroll-select">
+        <option value="">Selecione...</option>
+      </select><br>
+
+      <label for="num_receptor_1">RX:</label>
+      <input type="number" id="num_receptor_1" name="num_receptor[]"><br>
+
+      <label for="iav_1">IAV:</label>
+      <input type="number" step="0.01" id="iav_1" name="iav[]" oninput="calcularRelacaoDinamica(this)"><br>
+
+      <label for="ith_1">ITH:</label>
+      <input type="number" step="0.01" id="ith_1" name="ith[]" oninput="calcularRelacaoDinamica(this)"><br>
+
+      <label for="relacao_dinamica_1">Relação (%):</label>
+      <input type="text" id="relacao_dinamica_1" name="relacao_dinamica[]" readonly><br>
+
+      <label for="tipo_manutencao_rx_1">Tipo de Manutenção:</label>
+      <select id="tipo_manutencao_rx_1" name="tipo_manutencao_rx_1[]">
+        <option value="Preventiva">Preventiva</option>
+        <option value="Corretiva">Corretiva</option>
+        <option value="Check-List">Checklist</option>
+      </select><br>
+
+      <label for="horario_coleta_rx_1">Horário da Coleta (HH:MM):</label>
+      <input type="time" id="horario_coleta_rx_1" name="horario_coleta_rx[]" step="60" required><br><br>
+
+      <button type="button" class="btn-blue" onclick="adicionarReceptor()">Adicionar Receptor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TABELAS ===================== -->
+<div id="visualizacao-container" class="mt-4">
+  <h2>Dados do Transmissor</h2>
+  <table id="dados-transmissor">
+    <thead>
+      <tr>
+        <th>Circuito</th>
+        <th>TX</th>
+        <th>VOUT</th>
+        <th>POUT</th>
+        <th>TAP</th>
+        <th>Tipo</th>
+        <th>Manutenção</th>
+        <th>Horário</th>
+        <th>Temp (°C)</th> <!-- nova coluna -->
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Dados do Receptor</h2>
+  <table id="dados-receptor">
+    <thead>
+      <tr>
+        <th>Circuito</th>
+        <th>RX</th>
+        <th>IAV</th>
+        <th>ITH</th>
+        <th>Relação</th>
+        <th>Manutenção</th>
+        <th>Horário</th>
+        <th>Temp (°C)</th> <!-- nova coluna -->
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<hr>
+<button type="button" id="salvarDadosBtn" class="btn-green">Salvar Dados</button>
+<button type="button" id="btnGerarExcel" class="btn-blue mt-2">Gerar Excel para Estação</button>
+<button type="button" id="btnLimparTudo" class="btn-gray mt-2">Limpar tudo</button>
+
+<!-- Se seu projeto usa um JS global, mantenha-o. O preenchimento de circuitos acontece abaixo. -->
+<script src="{% static 'js/script.js' %}"></script>
+
+<script>
+/* ===================== Utilidades básicas ===================== */
+function getCookie(name){
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i=0; i<cookies.length; i++) {
+      const cookie = cookies[i].trimStart();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+function pad2(n){return String(n).padStart(2,'0');}
+function todayISO(){const d=new Date();return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;}
+function toHHMM(s){
+  if(s==null) return '';
+  s=String(s).trim();
+  const m=s.match(/^(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/);
+  if(!m) return s;
+  const hh=String(Math.min(23,Math.max(0,parseInt(m[1],10)))).padStart(2,'0');
+  const mm=String(Math.min(59,Math.max(0,parseInt(m[2],10)))).padStart(2,'0');
+  return `${hh}:${mm}`;
+}
+function isValidHHMM(s){ return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s).trim()); }
+function validarObrigatorioHHMMOuFocar(el,label){
+  const v = toHHMM(el.value); el.value = v;
+  if (!isValidHHMM(v)){ alert(`Horário de ${label} inválido. Use HH:MM.`); el.focus(); return false; }
+  return true;
+}
+function toFloatOrNull(v){const s=(''+(v??'')).replace(',','.').trim();if(s==='')return null;const n=Number(s);return Number.isFinite(n)?n:null;}
+function cellText(td){return (td?.textContent??'').trim();}
+
+/* ===================== Coordenadas Linha 5 — e aliases ===================== */
+const STATION_COORDS={
+  "Capão Redondo":{lat:-23.659253,lon:-46.768178},
+  "Campo Limpo":{lat:-23.649374,lon:-46.759148},
+  "Vila das Belezas":{lat:-23.640556,lon:-46.745833},
+  "Giovanni Gronchi":{lat:-23.643964,lon:-46.734247},
+  "Santo Amaro":{lat:-23.655693,lon:-46.720428},
+  "Largo Treze":{lat:-23.654524,lon:-46.710343},
+  "Adolfo Pinheiro":{lat:-23.650100,lon:-46.704200},
+  "Alto da Boa Vista":{lat:-23.641944,lon:-46.699722},
+  "Borba Gato":{lat:-23.633333,lon:-46.692778},
+  "Brooklin":{lat:-23.627164,lon:-46.688350},
+  "Campo Belo":{lat:-23.618889,lon:-46.682333},
+  "Eucaliptos":{lat:-23.610000,lon:-46.668611},
+  "Moema":{lat:-23.603611,lon:-46.661944},
+  "AACD Servidor":{lat:-23.597778,lon:-46.651944},
+  "Hospital São Paulo":{lat:-23.5954,lon:-46.6508},
+  "Santa Cruz":{lat:-23.598410,lon:-46.637040},
+  "Chácara Klabin":{lat:-23.592503,lon:-46.629978}
+};
+function norm(s){
+  return String(s||'')
+    .replace(/\u00A0/g,' ')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g,'-')
+    .toLowerCase().trim();
+}
+const STATION_ALIAS={
+  "hospital sao-paulo":"Hospital São Paulo",
+  "hospital sao paulo":"Hospital São Paulo",
+  "aacd servidor":"AACD Servidor",
+  "aacd-servidor":"AACD Servidor",
+  "chacara klabin":"Chácara Klabin",
+  "chácara klabin":"Chácara Klabin"
+};
+function resolveStationName(raw){
+  if (STATION_COORDS[raw]) return raw;
+  const ali = STATION_ALIAS[norm(raw)];
+  if (ali && STATION_COORDS[ali]) return ali;
+  const byNorm = {};
+  for (const [k] of Object.entries(STATION_COORDS)) byNorm[norm(k)] = k;
+  return byNorm[norm(raw)] || raw;
+}
+
+/* ===================== Circuitos por estação (seu dicionário) ===================== */
+window.CIRCUITOS_POR_ESTACAO = {
+  "Capão Redondo": [],
+  "Campo Limpo": [],
+  "Vila das Belezas": [],
+  "Giovanni Gronchi": [],
+  "Santo Amaro": [
+    "1E19T","2E16T","1E20T","2E17T",
+    "2E18T","2E19T","2E20T","1E21AT",
+    "1E21T","1E22T","1E23T","1E24T",
+    "2E21T","2E22T","1E25T","2E23T"
+  ],
+  "Largo Treze": [
+    "1E26T","1E27T","1E28T","1E29T",
+    "2E24T","2E25T","2E26T","2E27T"
+  ],
+  "Adolfo Pinheiro": [
+    "1E03T","1E31T","1E32T","2E28T","2E30T"
+  ],
+  "Alto da Boa Vista": [
+    "1W05T","1W04T","1E33",
+    "2E32T","2W04T","2E31T"
+  ],
+  "Borba Gato": [
+    "1W03T","1W01T","1W02T",
+    "2W03T","2W01T","2W02T"
+  ],
+  "Brooklin": [
+    "2E02T","2E01T","2E03T","2E05T","1E05T"
+  ],
+  "Campo Belo": [],
+  "Eucaliptos": [
+    "1E07T","1E08T","2E07T","2E08T",
+    "1E09T","1E10T","3E01T","2E09T",
+    "4E01T","2E10T","1E11T","1E12T",
+    "1E13T","2E11T","2E12T","2E13T"
+  ],
+  "Moema": [
+    "1E14T","2E14T","1E15T","2E15T",
+    "1E16T","2E16T","1E17T","2E17T",
+    "1E18T","2E18T","3E02T","4E02T"
+  ],
+  "AACD Servidor": [],
+  "Hospital São Paulo": [],
+  "Santa Cruz": [],
+  "Chácara Klabin": [
+    "1E26T","1E27T","1E28T","1E29T","1E30T","1E31T",
+    "2E26T","2E27T","2E28T","2E29T","2E30T","2E31T"
+  ]
+};
+
+/* ===================== Preencher selects TX/RX ===================== */
+function getCircuitosDaEstacao(nomeSpan){
+  const raw = (nomeSpan||'').trim();
+  if (window.CIRCUITOS_POR_ESTACAO[raw]) return window.CIRCUITOS_POR_ESTACAO[raw];
+  const mapaNorm = {};
+  for (const [k,v] of Object.entries(window.CIRCUITOS_POR_ESTACAO)) mapaNorm[norm(k)] = v;
+  const alias = STATION_ALIAS[norm(raw)];
+  if (alias && window.CIRCUITOS_POR_ESTACAO[alias]) return window.CIRCUITOS_POR_ESTACAO[alias];
+  return mapaNorm[norm(raw)] || [];
+}
+function preencherSelect(id, lista){
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  const ordenada = Array.from(new Set(lista)).sort();
+  for (const c of ordenada){
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  }
+  sel.disabled = ordenada.length === 0;
+}
+function reforcarPreenchimento(){
+  const est = document.getElementById('nome_estacao')?.textContent || '';
+  const lista = getCircuitosDaEstacao(est);
+  console.log('[CDV] Estação:', JSON.stringify(est));
+  console.log('[CDV] Circuitos resolvidos:', lista);
+  preencherSelect('num_circuito_tx_1', lista);
+  preencherSelect('num_circuito_rx_1', lista);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  // Data da coleta = hoje por padrão
+  const d = document.getElementById('data_coleta');
+  if (d && !d.value) d.value = todayISO();
+  // Preenche selects
+  reforcarPreenchimento();
+  setTimeout(reforcarPreenchimento, 0);
+  ['num_circuito_tx_1','num_circuito_rx_1'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('focus', reforcarPreenchimento, { once:true });
+  });
+});
+
+/* ===================== Temperatura horária (Open-Meteo) ===================== */
+async function fetchStationHourlyTemp(estacaoNome,dateStr,hhmm){
+  const resolved = resolveStationName(estacaoNome);
+  const coords = STATION_COORDS[resolved];
+  if(!coords){ alert(`Sem coordenadas para "${estacaoNome}".`); return null; }
+  const hh=(hhmm||'00:00').slice(0,2);
+  const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${coords.lat}&longitude=${coords.lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m&timezone=America%2FSao_Paulo`;
+  try{
+    const r=await fetch(url);
+    if(!r.ok) throw new Error('Falha na API de temperatura');
+    const data=await r.json();
+    const times=data?.hourly?.time||[], temps=data?.hourly?.temperature_2m||[];
+    const alvo=`${dateStr}T${hh}:00`;
+    let idx=times.indexOf(alvo);
+    if(idx===-1){
+      const h=parseInt(hh,10);
+      const alt1=`${dateStr}T${pad2(Math.max(0,h-1))}:00`;
+      const alt2=`${dateStr}T${pad2(Math.min(23,h+1))}:00`;
+      idx=times.indexOf(alt1); if(idx===-1) idx=times.indexOf(alt2);
+    }
+    if(idx===-1) return null;
+    const t=temps[idx];
+    return (typeof t==='number') ? Number(t.toFixed(1)) : null;
+  }catch(e){
+    console.error('[Temperatura]', e);
+    return null;
+  }
+}
+
+/* ===================== Tabelas / ações ===================== */
+function appendRow(tbodyId,cells){
+  const tbody=document.querySelector('#'+tbodyId+' tbody');
+  const tr=document.createElement('tr');
+  for(const c of cells){const td=document.createElement('td');td.textContent=(c==null||c==='')?'-':c;tr.appendChild(td);}
+  const tdAcoes=document.createElement('td');
+  const btnEdit=document.createElement('button');btnEdit.type='button';btnEdit.className='btn-green';btnEdit.textContent='Editar';
+  const btnDel=document.createElement('button');btnDel.type='button';btnDel.className='btn-red';btnDel.textContent='Remover';
+  tdAcoes.appendChild(btnEdit);tdAcoes.appendChild(btnDel);tr.appendChild(tdAcoes);tbody.appendChild(tr);
+
+  const isTX=(tbodyId==='dados-transmissor');
+  btnEdit.addEventListener('click',function(){
+    const tds=tr.querySelectorAll('td');
+    if(isTX){
+      document.getElementById('num_circuito_tx_1').value = tds[0].textContent.trim();
+      document.getElementsByName('num_transmissor[]')[0].value = tds[1].textContent.trim();
+      document.getElementsByName('vout[]')[0].value = tds[2].textContent.trim();
+      document.getElementsByName('pout[]')[0].value = tds[3].textContent.trim();
+      document.getElementsByName('tap[]')[0].value = tds[4].textContent.trim();
+      document.getElementsByName('tipo_transmissor[]')[0].value = tds[5].textContent.trim();
+      document.getElementsByName('tipo_manutencao_tx_1[]')[0].value = tds[6].textContent.trim();
+      document.getElementById('horario_coleta_tx_1').value = toHHMM(tds[7].textContent.trim());
+    }else{
+      document.getElementById('num_circuito_rx_1').value = tds[0].textContent.trim();
+      document.getElementsByName('num_receptor[]')[0].value = tds[1].textContent.trim();
+      document.getElementsByName('iav[]')[0].value = tds[2].textContent.trim();
+      document.getElementsByName('ith[]')[0].value = tds[3].textContent.trim();
+      document.getElementsByName('relacao_dinamica[]')[0].value = tds[4].textContent.trim();
+      document.getElementsByName('tipo_manutencao_rx_1[]')[0].value = tds[5].textContent.trim();
+      document.getElementById('horario_coleta_rx_1').value = toHHMM(tds[6].textContent.trim());
+    }
+    tr.remove();
+  });
+  btnDel.addEventListener('click',()=>tr.remove());
+}
+
+/* ===================== Relação dinâmica ===================== */
+function calcularRelacaoDinamica(input){
+  const b = input.closest('.receptor-bloco');
+  const iav = parseFloat(b.querySelector('[name="iav[]"]').value);
+  const ith = parseFloat(b.querySelector('[name="ith[]"]').value);
+  const out = b.querySelector('[name="relacao_dinamica[]"]');
+  if (Number.isFinite(iav) && Number.isFinite(ith) && iav !== 0){
+    out.value = ((ith/iav)*100).toFixed(2) + '%';
+  } else {
+    out.value = '';
+  }
+}
+
+/* ===================== Adicionar TX/RX (com temperatura) ===================== */
+async function adicionarTransmissor(){
+  const est = document.getElementById('nome_estacao')?.textContent?.trim()||'';
+  const circuito = document.getElementById('num_circuito_tx_1').value;
+  const tx = document.getElementsByName('num_transmissor[]')[0].value;
+  const vout = document.getElementsByName('vout[]')[0].value;
+  const pout = document.getElementsByName('pout[]')[0].value;
+  const tap  = document.getElementsByName('tap[]')[0].value;
+  const tipo = document.getElementsByName('tipo_transmissor[]')[0].value;
+  const manut= document.getElementsByName('tipo_manutencao_tx_1[]')[0].value;
+  const horaEl=document.getElementById('horario_coleta_tx_1');
+  if (!circuito || !tx || !vout || !pout || !tap || !manut || !horaEl.value){ alert('Preencha todos os campos do Transmissor.'); return; }
+  if (!validarObrigatorioHHMMOuFocar(horaEl,'TX')) return;
+
+  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
+  const temp = await fetchStationHourlyTemp(est, dataStr, horaEl.value);
+
+  appendRow('dados-transmissor', [circuito, tx, vout, pout, tap, tipo, manut, toHHMM(horaEl.value), (temp??'-')]);
+
+  document.getElementById('num_circuito_tx_1').selectedIndex = 0;
+  document.getElementsByName('num_transmissor[]')[0].value='';
+  document.getElementsByName('vout[]')[0].value='';
+  document.getElementsByName('pout[]')[0].value='';
+  document.getElementsByName('tap[]')[0].value='';
+  document.getElementsByName('tipo_transmissor[]')[0].selectedIndex=0;
+  document.getElementsByName('tipo_manutencao_tx_1[]')[0].selectedIndex=0;
+  horaEl.value='';
+}
+async function adicionarReceptor(){
+  const est = document.getElementById('nome_estacao')?.textContent?.trim()||'';
+  const circuito=document.getElementById('num_circuito_rx_1').value;
+  const rx=document.getElementsByName('num_receptor[]')[0].value;
+  const iav=document.getElementsByName('iav[]')[0].value;
+  const ith=document.getElementsByName('ith[]')[0].value;
+  const rel=document.getElementsByName('relacao_dinamica[]')[0].value;
+  const manut=document.getElementsByName('tipo_manutencao_rx_1[]')[0].value;
+  const horaEl=document.getElementById('horario_coleta_rx_1');
+  if (!circuito || !rx || !iav || !ith || !manut || !horaEl.value){ alert('Preencha todos os campos do Receptor.'); return; }
+  if (!validarObrigatorioHHMMOuFocar(horaEl,'RX')) return;
+
+  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
+  const temp = await fetchStationHourlyTemp(est, dataStr, horaEl.value);
+
+  appendRow('dados-receptor', [circuito, rx, iav, ith, rel, manut, toHHMM(horaEl.value), (temp??'-')]);
+
+  document.getElementById('num_circuito_rx_1').selectedIndex=0;
+  document.getElementsByName('num_receptor[]')[0].value='';
+  document.getElementsByName('iav[]')[0].value='';
+  document.getElementsByName('ith[]')[0].value='';
+  document.getElementsByName('relacao_dinamica[]')[0].value='';
+  document.getElementsByName('tipo_manutencao_rx_1[]')[0].selectedIndex=0;
+  horaEl.value='';
+}
+
+/* ===================== Normalização de Tipo de Manutenção p/ backend ===================== */
+function normalizaTipoManutencao(txt){
+  const t=(txt||'').toLowerCase().trim();
+  if (t.startsWith('corret')) return 'corretiva';
+  if (t.startsWith('check'))  return 'checklist';
+  return 'preventiva';
+}
+
+/* ===================== Salvar (envia temperatura_local) ===================== */
+/* TX cols: [0]Circ,[1]TX,[2]VOUT,[3]POUT,[4]TAP,[5]Tipo,[6]Manut,[7]Hora,[8]Temp] */
+function rowToTransmissor(tr){
+  const t=tr.querySelectorAll('td');
+  return {
+    num_circuito: cellText(t[0])||null,
+    num_transmissor: cellText(t[1])||null,
+    vout: toFloatOrNull(cellText(t[2])),
+    pout: toFloatOrNull(cellText(t[3])),
+    tap: cellText(t[4]),
+    tipo_transmissor: cellText(t[5]),
+    tipo_manutencao: normalizaTipoManutencao(cellText(t[6])),
+    horario_coleta: cellText(t[7])||null,
+    temperatura_local: toFloatOrNull(cellText(t[8]))  // <- vai ao backend
+  };
+}
+/* RX cols: [0]Circ,[1]RX,[2]IAV,[3]ITH,[4]Rel,[5]Manut,[6]Hora,[7]Temp] */
+function rowToReceptor(tr){
+  const t=tr.querySelectorAll('td');
+  const relStr=(cellText(t[4])||'').replace('%','').replace(',','.');
+  const relNum=relStr===''?null:Number(relStr);
+  return {
+    num_circuito: cellText(t[0])||null,
+    num_receptor: cellText(t[1])||null,
+    iav: toFloatOrNull(cellText(t[2])),
+    ith: toFloatOrNull(cellText(t[3])),
+    relacao: Number.isFinite(relNum)?relNum:null,
+    tipo_manutencao: normalizaTipoManutencao(cellText(t[5])),
+    horario_coleta: cellText(t[6])||null,
+    temperatura_local: toFloatOrNull(cellText(t[7]))  // <- vai ao backend
+  };
+}
+async function salvarDados(){
+  const estacao=document.getElementById('nome_estacao')?.textContent?.trim()||'';
+  const transmissores=Array.from(document.querySelectorAll('#dados-transmissor tbody tr')).map(rowToTransmissor);
+  const receptores=Array.from(document.querySelectorAll('#dados-receptor tbody tr')).map(rowToReceptor);
+
+  // bloqueio: sem horário/temperatura não salva
+  const faltaHorario=transmissores.some(tx=>!tx.horario_coleta)||receptores.some(rx=>!rx.horario_coleta);
+  const faltaTemp=transmissores.some(tx=>tx.temperatura_local==null)||receptores.some(rx=>rx.temperatura_local==null);
+  if(faltaHorario||faltaTemp){ alert('Há linhas sem horário e/ou temperatura. Complete antes de salvar.'); return; }
+
+  const payload={ estacao, data_coleta: document.getElementById('data_coleta')?.value || null, transmissores, receptores };
+
+  try{
+    const resp=await fetch("{% url 'salvar_dados_cdv' %}",{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body:JSON.stringify(payload)
+    });
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.message||'Falha ao salvar');
+    alert(data.message||'Dados salvos com sucesso!');
+    document.querySelector('#dados-transmissor tbody').innerHTML='';
+    document.querySelector('#dados-receptor tbody').innerHTML='';
+  }catch(e){
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+document.getElementById('salvarDadosBtn')?.addEventListener('click', salvarDados);
+
+/* ===================== Botão: Gerar Excel (vai para a página de filtros) ===================== */
+document.getElementById('btnGerarExcel')?.addEventListener('click', function(){
+  const base="{% url 'gerar_relatorio_excel_page' %}";
+  const est = document.getElementById('nome_estacao')?.textContent?.trim()||"";
+  if(!est){ alert("Nenhuma estação selecionada!"); return; }
+  const params=new URLSearchParams({ last_estacao_nome: est });
+  window.location.href=`${base}?${params.toString()}`;
+});
+
+/* ===================== Limpar tudo ===================== */
+document.getElementById('btnLimparTudo')?.addEventListener('click', function(){
+  document.querySelector('#dados-transmissor tbody').innerHTML='';
+  document.querySelector('#dados-receptor tbody').innerHTML='';
+  ['num_circuito_tx_1','num_circuito_rx_1'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.selectedIndex=0;
+  });
+  ['num_transmissor[]','vout[]','pout[]','tap[]','num_receptor[]','iav[]','ith[]','relacao_dinamica[]'].forEach(n=>{
+    const el=document.getElementsByName(n)[0]; if(el) el.value='';
+  });
+  ['tipo_transmissor[]','tipo_manutencao_tx_1[]','tipo_manutencao_rx_1[]'].forEach(n=>{
+    const el=document.getElementsByName(n)[0]; if(el) el.selectedIndex=0;
+  });
+  ['horario_coleta_tx_1','horario_coleta_rx_1'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+});
+</script>
+{% endblock %}

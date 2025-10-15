@@ -1,0 +1,63 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Título da Aplicação{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="manifest" href="{% static 'pwa/manifest.json' %}">
+    <meta name="theme-color" content="#6c2bd9">
+    <link rel="apple-touch-icon" href="{% static 'pwa/icons/icon-192.png' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    {% block extra_head %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% endblock %}
+    
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <a href="{% url 'index' %}">
+                <img src="{% static 'img/logo.png' %}" alt="" class="logo">
+            </a>
+        </div>
+        <nav>
+            {% if user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" style="padding: 0; border: none; background: none; cursor: pointer;">Sair</button>
+                </form>
+            {% else %}
+                <p><a href="{% url 'login' %}">Login</a></p>
+            {% endif %}
+        </nav>
+    </header>
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <footer>
+        {% block footer %}
+            <p>Desenvolvido por Willian L. Vieira</p>
+            <p>&copy; 2025 CDV - Todos os direitos reservados. </p>
+        {% endblock %}
+    </footer>
+
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+        navigator.serviceWorker.register("{% static 'pwa/sw.js' %}", { scope: "/" })
+            .then(reg => console.log("[PWA] SW registrado:", reg.scope))
+            .catch(err => console.error("[PWA] SW erro:", err));
+        });
+    }
+    </script>
+
+    {% block extra_body %}{% endblock %}
+</body>
+</html>

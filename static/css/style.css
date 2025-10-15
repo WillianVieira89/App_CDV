@@ -1,0 +1,344 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #EDE7F6; /* Terciária (Fundo) */
+    color: #374151; /* Texto Principal */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding-bottom: 20px; /* Adiciona espaço inferior para o footer, se houver */
+}
+
+h1, h2, h3 {
+    color: #A855F7; /* Primária */
+    text-align: center; /* Centraliza os títulos */
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #6B7280; /* Texto Secundário */
+}
+
+input[type="number"],
+input[type="text"],
+select {
+    width: 200px;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #D8B4FE; /* Secundária (Borda) */
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #F5EEF8; /* Destaque/Acento (Fundo do Input) */
+    color: #374151; /* Texto Principal no Input */
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #D8B4FE; /* Secundária (Fundo do Botão) */
+    color: #374151; /* Texto no Botão */
+    border: 1px solid #A855F7; /* Primária (Borda do Botão) */
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave para hover */
+}
+
+button:hover {
+    background-color: #A855F7; /* Primária (Hover do Botão) */
+    color: white;
+}
+
+.secao {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #D8B4FE; /* Secundária (Borda da Seção) */
+    border-radius: 5px;
+    background-color: #F5EEF8; /* Destaque/Acento (Fundo da Seção) */
+    width: 90%; /* Largura para as seções */
+    max-width: 800px; /* Largura máxima para as seções */
+}
+
+.secao h3 {
+    margin-top: 0;
+    color: #D8B4FE; /* Secundária (Título da Seção) */
+}
+
+.conteudo-principal {
+    display: flex;
+    gap: 20px;
+    align-items: stretch; /* Esticar os containers transmissor e receptor */
+    width: 90%;
+    max-width: 1000px;
+    margin-bottom: 20px;
+    flex-direction: row; /* Garante que os itens fiquem lado a lado */
+}
+
+#transmissores-container,
+#receptores-container {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #D8B4FE;
+    border-radius: 5px;
+    background-color: #F5EEF8;
+    display: flex;
+    flex-direction: column;
+}
+
+#transmissores-container h2,
+#receptores-container h2 {
+    margin-top: 0;
+    color: #A855F7;
+    margin-bottom: 15px;
+}
+
+.transmissor-bloco,
+.receptor-bloco {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #EDE7F6;
+    border-radius: 3px;
+    background-color: #FFFFFF;
+    flex-grow: 1;
+}
+
+.resultado-receptor {
+    margin-top: auto;
+    font-weight: bold;
+    color: #A855F7;
+}
+
+/* Estilos para a página inicial (index.html) */
+.estacoes-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+    width: 90%;
+    max-width: 800px;
+}
+
+.estacao-botao,
+.estacao-link {
+    display: block;
+    padding: 15px 20px;
+    background-color: #A855F7; /* Cor primária lilás */
+    color: white; /* Texto branco */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.estacao-botao:hover,
+.estacao-link:hover {
+    background-color: #D8B4FE; /* Tom de lilás mais claro no hover */
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #374151; /* Texto principal no hover */
+}
+
+#visualizacao-container {
+    display: block;
+    width: 100%;
+    flex-basis: 100%;
+    flex-shrink: 0;
+    margin-bottom: 20px; /* Adiciona um pouco de espaço abaixo da tabela */
+}
+
+/* Estilos para as tabelas de visualização */
+#dados-transmissor,
+#dados-receptor {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #D8B4FE;
+    background-color: #FFFFFF;
+}
+
+#dados-transmissor th,
+#dados-receptor th {
+    background-color: #A855F7;
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #D8B4FE;
+}
+
+#dados-transmissor td,
+#dados-receptor td {
+    padding: 8px;
+    border-bottom: 1px solid #EDE7F6;
+}
+
+#dados-transmissor tr:nth-child(even),
+#dados-receptor tr:nth-child(even) {
+    background-color: #F5EEF8;
+}
+
+#dados-transmissor tr:last-child td,
+#dados-receptor tr:last-child td {
+    border-bottom: none;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0; /* Remover margens padrão do body */
+    padding: 0; /* Remover padding padrão do body */
+    background-color: #f4f4f4; /* Cor de fundo clara */
+    color: #333;
+    display: flex; /* Usar flexbox para o layout geral */
+    flex-direction: column; /* Organizar os filhos verticalmente */
+    min-height: 100vh; /* Ocupar a altura total da viewport */
+    box-sizing: border-box;
+}
+
+header {
+    display: flex;
+    align-items: center; /* Alinhar verticalmente o logo e a navegação */
+    padding: 10px 20px;
+    background-color: #f8f9fa; /* Cor de fundo do cabeçalho (opcional) */
+    border-bottom: 1px solid #eee; /* Borda inferior (opcional) */
+    justify-content: flex-start; /* Alinhar o logo à esquerda */
+    width: 100%; /* Ocupar a largura total */
+    box-sizing: border-box;
+}
+
+.logo-container {
+    margin-right: 20px; /* Espaçamento entre o logo e a navegação */
+}
+
+.logo-container img {
+    max-height: 0px; /* Novo valor para a altura máxima */
+    max-width: 300px;  /* Largura máxima (ajuste conforme necessário) */
+    height: auto; /* Manter a proporção da imagem */
+}
+
+nav {
+    margin-left: auto; /* Empurra a navegação para a direita (se houver) */
+}
+
+nav a {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #333;
+}
+
+.content {
+    padding: 20px; /* Espaçamento ao redor do conteúdo principal */
+    flex-grow: 1; /* Faz o conteúdo principal ocupar o espaço restante */
+    width: 100%; /* Ocupar a largura total */
+    box-sizing: border-box;
+}
+
+/* Estilos específicos para a página de seleção de estação (index.html) */
+.estacoes-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+    width: 90%; /* Largura do container das estações */
+    max-width: 800px;
+    margin: 20px auto; /* Centralizar o container das estações */
+}
+
+/* Estilos específicos para a página de registrar CDV */
+.conteudo-principal {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    width: 90%;
+    max-width: 1000px;
+    margin: 20px auto; /* Centralizar o container principal */
+}
+
+#transmissores-container,
+#receptores-container {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #D8B4FE;
+    border-radius: 5px;
+    background-color: #F5EEF8;
+    display: flex;
+    flex-direction: column;
+}
+
+#visualizacao-container {
+    display: block;
+    width: 90%;
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+/* Estilos para as tabelas de visualização */
+#dados-transmissor,
+#dados-receptor {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #D8B4FE;
+    background-color: #FFFFFF;
+}
+
+.gerar-csv-container h2 {
+    color: #A855F7; /* Cor primária lilás */
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #6B7280;
+    text-align: left;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #D8B4FE;
+    border-radius: 4px;
+    box-sizing: border-box;
+    color: #374151;
+}
+
+.botao-primario {
+    padding: 12px 25px;
+    background-color: #A855F7; /* Cor primária lilás */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+.botao-primario:hover {
+    background-color: #D8B4FE;
+    color: #374151;
+}
+
+.mt-3 {
+    margin-top: 1.5em;
+}
+
+.mt-3 a {
+    color: #6B7280;
+    text-decoration: none;
+}
+
+.mt-3 a:hover {
+    color: #A855F7;
+}

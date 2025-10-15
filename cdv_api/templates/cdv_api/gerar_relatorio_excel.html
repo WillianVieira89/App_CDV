@@ -1,0 +1,78 @@
+{% extends 'cdv_api/base.html' %}
+
+{% block title %}Gerar Relatório Excel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Gerar Relatório Excel por Estação, Circuito e Data</h2>
+
+    <form id="form_excel" method="get" action="{% url 'gerar_excel_estacao' %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="estacao_selecionada">Selecionar Estação:</label>
+            <select class="form-control" id="estacao_selecionada" name="estacao_id" required>
+                <option value="">-- Selecione uma Estação --</option>
+                {% for estacao in lista_de_estacoes %}
+                    <option value="{{ estacao.id }}">{{ estacao.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="circuito_filtro">Número do Circuito (Opcional):</label>
+            <input type="text" class="form-control" id="circuito_filtro" name="circuito_filtro">
+        </div>
+
+        <div class="form-group">
+            <label for="tipo_manutencao">Tipo de Manutenção (Opcional):</label>
+            <select class="form-control" id="tipo_manutencao" name="tipo_manutencao">
+                <option value="">-- Todos --</option>
+                <option value="preventiva" {% if tipo_manutencao == "preventiva" %}selected{% endif %}>Preventiva</option>
+                <option value="corretiva"  {% if tipo_manutencao == "corretiva"  %}selected{% endif %}>Corretiva</option>
+                <option value="checklist"  {% if tipo_manutencao == "checklist"  %}selected{% endif %}>Checklist</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="data_inicio">Data de Início:</label>
+            <input type="date" class="form-control" id="data_inicio" name="data_inicio">
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="data_fim">Data de Fim:</label>
+            <input type="date" class="form-control" id="data_fim" name="data_fim">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Gerar Relatório Excel</button>
+        <p class="mt-3"><a href="javascript:history.back()">Registro CDV</a></p>
+    </form>
+
+    <!-- Área da mensagem de sucesso -->
+    <div id="mensagem_sucesso" style="display: none; margin-top: 20px;" class="alert alert-success">
+        ✅ Relatório gerado com sucesso!
+    </div>
+</div>
+
+<!-- Script para limpar campos e mostrar mensagem -->
+<script>
+    document.getElementById("form_excel").addEventListener("submit", function () {
+        setTimeout(() => {
+            // Limpa os campos
+            document.getElementById("estacao_selecionada").value = "";
+            document.getElementById("circuito_filtro").value = "";
+            document.getElementById("data_inicio").value = "";
+            document.getElementById("data_fim").value = "";
+
+            // Mostra a mensagem de sucesso
+            const msg = document.getElementById("mensagem_sucesso");
+            msg.style.display = "block";
+
+            // Oculta a mensagem após 5 segundos
+            setTimeout(() => {
+                msg.style.display = "none";
+            }, 5000);
+        }, 500); // tempo para o envio do formulário ocorrer
+    });
+</script>
+{% endblock %}

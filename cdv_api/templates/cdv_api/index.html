@@ -1,0 +1,42 @@
+{% extends 'cdv_api/base.html' %}
+
+{% block title %}Seleção da Estação{% endblock %}
+
+{% block content %}
+{% load static %}
+
+
+    <h1>Selecione a Estação</h1>
+    <div class="estacoes-container">
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Capão Redondo')">Capão Redondo</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Campo Limpo')">Campo Limpo</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Vila das Belezas')">Vila das Belezas</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Giovanni Gronchi')">Giovanni Gronchi</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Santo Amaro')">Santo Amaro</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Largo Treze')">Largo Treze</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Adolfo Pinheiro')">Adolfo Pinheiro</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Alto da Boa Vista')">Alto da Boa Vista</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Borba Gato')">Borba Gato</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Brooklin')">Brooklin</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Campo Belo')">Campo Belo</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Eucaliptos')">Eucaliptos</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Moema')">Moema</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('AACD-Servidor')">AACD Servidor</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Hospital São-Paulo')">Hospital São Paulo</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Santa Cruz')">Santa Cruz</button>
+        <button class="estacao-botao" onclick="redirecionarParaRegistro('Chacara Klabin')">Chácara Klabin</button>
+    </div>
+
+<!-- Botão para acessar relatórios Excel -->
+<div style="margin-top: 40px; text-align: center;">
+    <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn btn-outline-success" style="padding: 10px 20px; font-size: 16px; border-radius: 8px;">
+        📊 Ir para Relatórios Excel
+    </a>
+</div>
+
+    <script>
+        function redirecionarParaRegistro(estacao) {
+            window.location.href = `/registrar_cdv/?estacao=${estacao}`;
+        }
+    </script>
+{% endblock %}
