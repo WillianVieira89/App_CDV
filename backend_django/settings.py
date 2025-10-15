@@ -74,6 +74,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend_django.wsgi.application"
 
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# Hosts do Render
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
+ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME, "localhost"] if RENDER_EXTERNAL_HOSTNAME else ["*"]
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -119,6 +129,15 @@ USE_I18N = True
 
 USE_TZ = True
 
+# SQLite via variável de ambiente
+SQLITE_PATH = os.environ.get("SQLITE_PATH", str(BASE_DIR / "db.sqlite3"))
+os.makedirs(os.path.dirname(SQLITE_PATH), exist_ok=True)
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": SQLITE_PATH,
+    }
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
