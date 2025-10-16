@@ -16,5 +16,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ping/', ping),                 # ← agora existe /ping/
     path('', home_ok),                   # ← home temporária que NÃO quebra
-    path('', include('cdv_api.urls')),   # deixa por último para não sobrescrever a home provisória
+    path('app/', include('cdv_api.urls')),   # deixa por último para não sobrescrever a home provisória
 ]

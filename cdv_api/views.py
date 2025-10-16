@@ -580,3 +580,12 @@ def gerar_excel_estacao(request):
     resp["Content-Disposition"] = f'attachment; filename="dados_{estacao.nome}.xlsx"'
     wb.save(resp)
     return resp
+
+@login_required
+def home(request):
+    try:
+        # ajuste o nome do template conforme seu projeto
+        return render(request, "home.html", {})
+    except Exception:
+        logger.exception("Falha ao renderizar home()")
+        return render(request, "erro_generico.html", status=500)
