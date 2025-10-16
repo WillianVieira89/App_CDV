@@ -13,8 +13,6 @@ def home_ok(request):
     return HttpResponse("Home OK")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('ping/', ping),                 # ← agora existe /ping/
-    path('', home_ok),                   # ← home temporária que NÃO quebra
-    path('app/', include('cdv_api.urls')),   # deixa por último para não sobrescrever a home provisória
+    path('admin/', admin.site.urls), 
+    path('', include('cdv_api.urls')),
 ]
