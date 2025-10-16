@@ -253,22 +253,6 @@ def salvar_dados_cdv(request):
 # =========================
 # Autenticação
 # =========================
-def login_view(request):
-    if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect("index")
-            else:
-                form.add_error(None, "Nome de usuário ou senha incorretos.")
-        return render(request, "cdv_api/login.html", {"form": form})
-    else:
-        form = AuthenticationForm()
-        return render(request, "cdv_api/login.html", {"form": form})
     
 @login_required
 def gerar_excel_estacao(request):
@@ -589,3 +573,44 @@ def home(request):
     except Exception:
         logger.exception("Falha ao renderizar home()")
         return render(request, "erro_generico.html", status=500)
+    
+@login_required
+def index(request):
+    """Home autenticada. Tenta usar template; se não existir, cai no fallback sem quebrar."""
+    lista_de_estacoes = Estacao.objects.all().order_by("nome")
+    selected_estacao_id = request.GET.get("estacao_id")
+    context = {
+        "lista_de_estacoes": lista_de_estacoes,
+        "selected_estacao_id": selected_estacao_id,
+    }
+    try:
+        return render(request, "cdv_api/index.html", context)
+    except TemplateDoesNotExist:
+        return HttpResponse("<h1>Home OK</h1>")  # fallback sem template
+
+def login_view(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = authenticate(
+                username=form.cleaned_data.get("username"),
+                password=form.cleaned_data.get("password"),
+            )
+            if user is not None:
+                login(request, user)
+                return redirect("index")  # bate com cdv_api/urls.py ("")
+            else:
+                form.add_error(None, "Nome de usuário ou senha incorretos.")
+        return render(request, "cdv_api/login.html", {"form": form})
+    else:
+        form = AuthenticationForm()
+        return render(request, "cdv_api/login.html", {"form": form})
+
+@login_required
+def home(request):
+    """Se você realmente precisa de /home, aponte para o template certo e tenha fallback de erro."""
+    try:
+        return render(request, "cdv_api/home.html", {})
+    except TemplateDoesNotExist:
+        logger.exception("Falha ao renderizar home()")
+        return render(request, "cdv_api/erro_generico.html", status=500)
