@@ -19,6 +19,8 @@ from .models import Estacao, Transmissor, Receptor
 from .forms import ReceptorForm, TransmissorForm
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
+from django.template import TemplateDoesNotExist
+
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -60,16 +62,6 @@ def safe_int(value):
 # =========================
 # Páginas principais
 # =========================
-@login_required
-def index(request):
-    lista_de_estacoes = Estacao.objects.all().order_by("nome")
-    selected_estacao_id = request.GET.get("estacao_id")
-    context = {
-        "lista_de_estacoes": lista_de_estacoes,
-        "selected_estacao_id": selected_estacao_id,
-    }
-    return render(request, "cdv_api/index.html", context)
-
 
 @login_required
 def registrar_cdv(request):
@@ -564,29 +556,20 @@ def gerar_excel_estacao(request):
     resp["Content-Disposition"] = f'attachment; filename="dados_{estacao.nome}.xlsx"'
     wb.save(resp)
     return resp
+    
 
 @login_required
-def home(request):
-    try:
-        # ajuste o nome do template conforme seu projeto
-        return render(request, "home.html", {})
-    except Exception:
-        logger.exception("Falha ao renderizar home()")
-        return render(request, "erro_generico.html", status=500)
-    
-@login_required
 def index(request):
-    """Home autenticada. Tenta usar template; se não existir, cai no fallback sem quebrar."""
     lista_de_estacoes = Estacao.objects.all().order_by("nome")
-    selected_estacao_id = request.GET.get("estacao_id")
     context = {
         "lista_de_estacoes": lista_de_estacoes,
-        "selected_estacao_id": selected_estacao_id,
+        "selected_estacao_id": request.GET.get("estacao_id"),
     }
     try:
         return render(request, "cdv_api/index.html", context)
     except TemplateDoesNotExist:
-        return HttpResponse("<h1>Home OK</h1>")  # fallback sem template
+        logger.exception("Template cdv_api/index.html ausente")
+        return HttpResponse("<h1>Home OK</h1>")  # fallback sem 500
 
 def login_view(request):
     if request.method == "POST":
