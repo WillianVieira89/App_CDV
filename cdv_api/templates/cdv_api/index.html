@@ -1,10 +1,9 @@
 {% extends 'cdv_api/base.html' %}
+{% load static %}
 
 {% block title %}Seleção da Estação{% endblock %}
 
 {% block content %}
-{% load static %}
-
 
     <h1>Selecione a Estação</h1>
     <div class="estacoes-container">
@@ -29,14 +28,15 @@
 
 <!-- Botão para acessar relatórios Excel -->
 <div style="margin-top: 40px; text-align: center;">
-    <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn btn-outline-success" style="padding: 10px 20px; font-size: 16px; border-radius: 8px;">
+    <a href="{'gerar_relatorio_excel'}" class="btn btn-outline-success" style="padding: 10px 20px; font-size: 16px; border-radius: 8px;">
         📊 Ir para Relatórios Excel
     </a>
 </div>
 
     <script>
         function redirecionarParaRegistro(estacao) {
-            window.location.href = `/registrar_cdv/?estacao=${estacao}`;
+            const base = "{% url 'registrar_cdv' %}";
+            window.location.href = `${base}?estacao=${encodeURIComponent(estacao)}`;
         }
     </script>
 {% endblock %}
