@@ -2,36 +2,28 @@
 import os
 from pathlib import Path
 
-import dj_database_url  # HEROKU: pip install dj-database-url
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ------------------ Básico ------------------
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")  # troque em produção!
 
-# ------------------ Hosts e CSRF ------------------
-# Para Heroku, defina no painel:
-#   ALLOWED_HOSTS=seuapp.herokuapp.com
-#   CSRF_TRUSTED_ORIGINS=https://seuapp.herokuapp.com
-ALLOWED_HOSTS = [h.strip() for h in os.getenv(
-    "ALLOWED_HOSTS",
-    "localhost,127.0.0.1"
-).split(",") if h.strip()]
+# ------------------ Hosts / CSRF ------------------
+# Aceita lista separada por vírgula. Ex.: "meuapp.pythonanywhere.com,localhost,127.0.0.1"
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv(
-    "CSRF_TRUSTED_ORIGINS",
-    ""
-).split(",") if o.strip()]
+# CSRF_TRUSTED_ORIGINS exige esquema (https://...)
+# Ex.: "https://meuapp.pythonanywhere.com,https://meuapp.alwaysdata.net"
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_ALLOWED_ORIGIN", "").split(",") if o.strip()]
 
 # ------------------ Auth ------------------
 LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/"          # crítico: bate com path('', views.index, name='index')
+LOGIN_REDIRECT_URL = "/"      # <- crítico: existe e evita 500 pós-login
 LOGOUT_REDIRECT_URL = "/login/"
 
 # ------------------ Apps ------------------
 INSTALLED_APPS = [
-    "whitenoise.runserver_nostatic",
+    "whitenoise.runserver_nostatic",  # mantém o runserver leve
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -43,7 +35,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # antes de SessionMiddleware é ok
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # logo após SecurityMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -57,7 +49,8 @@ ROOT_URLCONF = "backend_django.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],   # opcional; app templates continuam valendo
+        # Mantém /templates como pasta global (além dos templates de cada app)
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -72,40 +65,38 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend_django.wsgi.application"
 
-# ------------------ Banco de dados ------------------
-# Heroku injeta DATABASE_URL (Postgres). Em dev, cai no SQLite.
-DATABASE_URL = os.getenv("DATABASE_URL")
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,  # pool de conexões
-            ssl_require=True,  # Postgres do Heroku usa SSL
-        )
-    }
-else:
-    SQLITE_PATH = os.environ.get("SQLITE_PATH", str(BASE_DIR / "db.sqlite3"))
-    _sqlite_dir = os.path.dirname(SQLITE_PATH)
-    if _sqlite_dir:
-        os.makedirs(_sqlite_dir, exist_ok=True)
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": SQLITE_PATH,
-            "OPTIONS": {"timeout": 30},
-        }
-    }
-
-# ------------------ Arquivos estáticos (WhiteNoise) ------------------
+# ------------------ Arquivos estáticos ------------------
+# Funciona com WhiteNoise e também com mapeamento de "Static files" (PA/AlwaysData)
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = BASE_DIR / "staticfiles"        # coletados por collectstatic
+# pasta "static" opcional para assets do projeto
 if (BASE_DIR / "static").exists():
     STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# ------------------ Banco de dados ------------------
+# 1) Se DATABASE_URL existir, usa (Neon/Render/PA etc.)
+# 2) Caso contrário, cai no SQLite local
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.environ.get("SQLITE_PATH", str(BASE_DIR / "db.sqlite3")),
+        "OPTIONS": {"timeout": 30},
+    }
+}
+
+_db_url = os.getenv("DATABASE_URL")
+if _db_url:
+    try:
+        import dj_database_url  # certifique-se de ter no requirements.txt
+        DATABASES["default"] = dj_database_url.parse(_db_url, conn_max_age=600, ssl_require=True)
+    except Exception:
+        # Se faltar lib, não quebra; continua no SQLite
+        pass
 
 # ------------------ i18n ------------------
 LANGUAGE_CODE = "pt-br"
@@ -114,8 +105,9 @@ USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# ------------------ Segurança/Proxy (Heroku) ------------------
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # Heroku proxy
+# ------------------ Segurança produção ------------------
+# Atrás de proxy (PythonAnywhere / AlwaysData) isso evita problemas de scheme
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -125,7 +117,7 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# ------------------ Logging p/ pegar 500 no log da dyno ------------------
+# ------------------ Logging útil pra 500 ------------------
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
