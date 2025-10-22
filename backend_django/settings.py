@@ -10,11 +10,12 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")  # troque em produ
 
 # ------------------ Hosts / CSRF ------------------
 # Aceita lista separada por vírgula. Ex.: "meuapp.pythonanywhere.com,localhost,127.0.0.1"
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+ALLOWED_HOSTS = [    "WillianVieira89.pythonanywhere.com",  # seu domínio PA
+    "localhost", "127.0.0.1"]
 
 # CSRF_TRUSTED_ORIGINS exige esquema (https://...)
 # Ex.: "https://meuapp.pythonanywhere.com,https://meuapp.alwaysdata.net"
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_ALLOWED_ORIGIN", "").split(",") if o.strip()]
+CSRF_TRUSTED_ORIGINS = ["https://WillianVieira89.pythonanywhere.com"]
 
 # ------------------ Auth ------------------
 LOGIN_URL = "/login/"
@@ -81,10 +82,11 @@ if (BASE_DIR / "static").exists():
 # ------------------ Banco de dados ------------------
 # 1) Se DATABASE_URL existir, usa (Neon/Render/PA etc.)
 # 2) Caso contrário, cai no SQLite local
+# sqlite ok no plano free
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("SQLITE_PATH", str(BASE_DIR / "db.sqlite3")),
+        "NAME": str(BASE_DIR / "db.sqlite3"),
         "OPTIONS": {"timeout": 30},
     }
 }
