@@ -73,11 +73,11 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"        # coletados por collectstatic
-# pasta "static" opcional para assets do projeto
+STATICFILES_DIRS = []
 if (BASE_DIR / "static").exists():
-    STATICFILES_DIRS = [BASE_DIR / "static"]
+    STATICFILES_DIRS.append(BASE_DIR / "static")
+if (BASE_DIR / "backend_django" / "static").exists():
+    STATICFILES_DIRS.append(BASE_DIR / "backend_django" / "static")
 
 # ------------------ Banco de dados ------------------
 # 1) Se DATABASE_URL existir, usa (Neon/Render/PA etc.)
