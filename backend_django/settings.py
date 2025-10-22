@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")  # troque em produ
 
 # ------------------ Hosts / CSRF ------------------
 # Aceita lista separada por vírgula. Ex.: "meuapp.pythonanywhere.com,localhost,127.0.0.1"
-ALLOWED_HOSTS = [    "WillianVieira89.pythonanywhere.com",  # seu domínio PA
+ALLOWED_HOSTS = ["WillianVieira89.pythonanywhere.com",  # seu domínio PA
     "localhost", "127.0.0.1"]
 
 # CSRF_TRUSTED_ORIGINS exige esquema (https://...)
