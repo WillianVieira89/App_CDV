@@ -5,7 +5,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ------------------ Básico ------------------
-DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+DEBUG = True
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")  # troque em produção!
 
 # ------------------ Hosts / CSRF ------------------
@@ -114,14 +114,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Atrás de proxy (PythonAnywhere / AlwaysData) isso evita problemas de scheme
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-
 # ------------------ Logging útil pra 500 ------------------
 LOGGING = {
     "version": 1,
@@ -133,3 +125,18 @@ LOGGING = {
     },
 }
 
+# Segurança: DEV vs PROD
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+else:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 ano
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
