@@ -14,4 +14,6 @@ urlpatterns = [
     path('registrar_cdv/', views.registrar_cdv, name='registrar_cdv'),
     path('gerar_relatorio_excel/', views.gerar_relatorio_excel_page, name='gerar_relatorio_excel_page'),
     path('gerar_excel/', views.gerar_excel_estacao, name='gerar_excel_estacao'),
+    path('dashboard/', views.dashboard_manutencao, name='dashboard_manutencao'),
+    path("historico_circuito/", views.historico_circuito, name="historico_circuito"),
 ]

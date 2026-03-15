@@ -1,0 +1,550 @@
+{% extends 'cdv_api/base.html' %}
+
+{% block title %}Dashboard de Manutenção{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        Dashboard de Manutenção CDV
+        {% if estacao_nome %}
+            - {{ estacao_nome }}
+        {% endif %}
+    </h2>
+
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label for="estacao_id" class="form-label">Estação</label>
+            <select name="estacao_id" id="estacao_id" class="form-control">
+                <option value="">-- Todas as Estações --</option>
+                {% for estacao in lista_de_estacoes %}
+                    <option value="{{ estacao.id }}" {% if selected_estacao_id == estacao.id|stringformat:"s" %}selected{% endif %}>
+                        {{ estacao.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="circuito_filtro" class="form-label">Circuito</label>
+            <input type="text" name="circuito_filtro" id="circuito_filtro" class="form-control" value="{{ circuito_filtro }}">
+        </div>
+
+        <div class="col-md-2">
+            <label for="tipo_manutencao" class="form-label">Tipo de Manutenção</label>
+            <select name="tipo_manutencao" id="tipo_manutencao" class="form-control">
+                <option value="">-- Todos --</option>
+                <option value="preventiva" {% if tipo_manutencao == "preventiva" %}selected{% endif %}>Preventiva</option>
+                <option value="corretiva" {% if tipo_manutencao == "corretiva" %}selected{% endif %}>Corretiva</option>
+                <option value="checklist" {% if tipo_manutencao == "checklist" %}selected{% endif %}>Checklist</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="data_inicio" class="form-label">Data Início</label>
+            <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}">
+        </div>
+
+        <div class="col-md-2">
+            <label for="data_fim" class="form-label">Data Fim</label>
+            <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}">
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Gerar Dashboard</button>
+            <a href="{% url 'dashboard_manutencao' %}" class="btn btn-secondary">Limpar Filtros</a>
+        </div>
+    </form>
+
+    <!-- Cards principais -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm">
+                <h6>Total TX</h6>
+                <h3>{{ total_tx }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm">
+                <h6>Total RX</h6>
+                <h3>{{ total_rx }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de faixas da relação -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm border-warning">
+                <h6>Circuitos abaixo de 60%</h6>
+                <h3 class="text-warning">{{ contagem_abaixo_60 }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm border-primary">
+                <h6>Circuitos entre 60% e 80%</h6>
+                <h3 class="text-primary">{{ contagem_entre_60_80 }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm border-danger">
+                <h6>Circuitos acima de 80%</h6>
+                <h3 class="text-danger">{{ contagem_acima_80 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de degradação -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm border-dark">
+                <h6>Total de degradações detectadas</h6>
+                <h3>{{ total_degradacao_gradual }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm border-warning">
+                <h6>Degradação negativa</h6>
+                <h3 class="text-warning">{{ total_degradacao_negativa }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm border-danger">
+                <h6>Degradação positiva</h6>
+                <h3 class="text-danger">{{ total_degradacao_positiva }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos TX e RX -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>Transmissores por Circuito</h5>
+                <div class="chart-box">
+                    <canvas id="graficoTX"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>Receptores por Circuito</h5>
+                <div class="chart-box">
+                    <canvas id="graficoRX"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos tipo e relação -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>Tipos de Manutenção</h5>
+                <div class="chart-box">
+                    <canvas id="graficoTipo"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <h5>Relação por Circuito</h5>
+                <div class="chart-box">
+                    <canvas id="graficoRelacao"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de circuitos críticos -->
+    <div class="card p-4 shadow-sm mb-5 tabela-bloco">
+        <h4 class="secao-titulo">Circuitos Críticos</h4>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle tabela-dashboard">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Circuito</th>
+                        <th>Relação</th>
+                        <th>Classificação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in circuitos_criticos %}
+                    <tr class="{{ item.classe_relacao }}">
+                        <td>
+                            <a href="#" onclick="event.preventDefault(); carregarHistorico('{{ item.circuito }}');">
+                                {{ item.circuito }}
+                            </a>
+                        </td>
+                        <td>{{ item.relacao }}%</td>
+                        <td>
+                            {% if item.relacao < 60 %}
+                                <span class="badge bg-warning text-dark">Baixa</span>
+                            {% elif item.relacao <= 80 %}
+                                <span class="badge bg-primary">Normal</span>
+                            {% else %}
+                                <span class="badge bg-danger">Alta</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">Nenhum circuito crítico encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tabela de degradação -->
+    <div class="card p-4 shadow-sm mb-5 tabela-bloco">
+        <h4 class="secao-titulo">Identificação Automática de Degradação</h4>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle tabela-dashboard">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Circuito</th>
+                        <th>Leitura 1</th>
+                        <th>Leitura 2</th>
+                        <th>Leitura 3</th>
+                        <th>Última Relação</th>
+                        <th>Variação</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in circuitos_em_degradacao %}
+                    <tr>
+                        <td>{{ item.circuito }}</td>
+                        <td>{{ item.leituras.0 }}%</td>
+                        <td>{{ item.leituras.1 }}%</td>
+                        <td>{{ item.leituras.2 }}%</td>
+                        <td>{{ item.ultima_relacao }}%</td>
+                        <td>{{ item.variacao_total }} pts</td>
+                        <td>
+                            {% if item.tipo_degradacao == "Negativa" %}
+                                <span class="badge bg-warning text-dark">Negativa</span>
+                            {% else %}
+                                <span class="badge bg-danger">Positiva</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            Nenhuma degradação detectada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Últimos TX -->
+    <div class="card p-4 shadow-sm mb-5 tabela-bloco">
+        <h4 class="secao-titulo">Últimos Registros de Transmissores</h4>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle tabela-dashboard">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Estação</th>
+                        <th>Circuito</th>
+                        <th>TX</th>
+                        <th>VOUT</th>
+                        <th>POUT</th>
+                        <th>TAP</th>
+                        <th>Tipo</th>
+                        <th>Temp. (°C)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ultimos_tx %}
+                    <tr>
+                        <td>{{ item.data_manutencao|date:"d/m/Y" }}</td>
+                        <td>{{ item.horario_coleta|time:"H:i" }}</td>
+                        <td>{{ item.estacao.nome }}</td>
+                        <td>{{ item.num_circuito }}</td>
+                        <td>{{ item.num_transmissor }}</td>
+                        <td>{{ item.vout }}</td>
+                        <td>{{ item.pout }}</td>
+                        <td>{{ item.tap }}</td>
+                        <td>{{ item.tipo_manutencao }}</td>
+                        <td>{{ item.temp_celsius|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center">Nenhum registro encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Últimos RX -->
+    <div class="card p-4 shadow-sm mb-5 tabela-bloco">
+        <h4 class="secao-titulo">Últimos Registros de Receptores</h4>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle tabela-dashboard">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Estação</th>
+                        <th>Circuito</th>
+                        <th>RX</th>
+                        <th>IAV</th>
+                        <th>ITH</th>
+                        <th>Relação</th>
+                        <th>Tipo</th>
+                        <th>Temp. (°C)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ultimos_rx %}
+                    <tr class="{{ item.classe_relacao }}">
+                        <td>{{ item.obj.data_manutencao|date:"d/m/Y" }}</td>
+                        <td>{{ item.obj.horario_coleta|time:"H:i" }}</td>
+                        <td>{{ item.obj.estacao.nome }}</td>
+                        <td>{{ item.obj.num_circuito }}</td>
+                        <td>{{ item.obj.num_receptor }}</td>
+                        <td>{{ item.obj.iav }}</td>
+                        <td>{{ item.obj.ith }}</td>
+                        <td>{{ item.obj.relacao }}</td>
+                        <td>{{ item.obj.tipo_manutencao }}</td>
+                        <td>{{ item.obj.temp_celsius|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="card p-4 shadow-sm mb-5 tabela-bloco">
+        <h4 class="card-header">Histórico do Circuito</h4>  
+    </div>
+    <div class="card-body">
+        <canvas id="graficoHistorico"></canvas>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const txLabels = {{ tx_labels|safe }};
+    const txData = {{ tx_data|safe }};
+
+    const rxLabels = {{ rx_labels|safe }};
+    const rxData = {{ rx_data|safe }};
+
+    const tipoLabels = {{ tipo_labels|safe }};
+    const tipoData = {{ tipo_data|safe }};
+
+    const relacaoLabels = {{ relacao_labels|safe }};
+    const relacaoData = {{ relacao_data|safe }};
+    const relacaoCores = {{ relacao_cores|safe }};
+
+    new Chart(document.getElementById('graficoTX'), {
+        type: 'bar',
+        data: {
+            labels: txLabels,
+            datasets: [{
+                label: 'Transmissores',
+                data: txData
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    new Chart(document.getElementById('graficoRX'), {
+        type: 'bar',
+        data: {
+            labels: rxLabels,
+            datasets: [{
+                label: 'Receptores',
+                data: rxData
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    new Chart(document.getElementById('graficoTipo'), {
+        type: 'pie',
+        data: {
+            labels: tipoLabels,
+            datasets: [{
+                label: 'Tipos de Manutenção',
+                data: tipoData
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    new Chart(document.getElementById('graficoRelacao'), {
+        type: 'bar',
+        data: {
+            labels: relacaoLabels,
+            datasets: [{
+                label: 'Relação (%)',
+                data: relacaoData,
+                backgroundColor: relacaoCores
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+let graficoHistorico = null;
+
+function carregarHistorico(circuito){
+
+fetch(`/historico_circuito/?circuito=${circuito}`)
+.then(r => r.json())
+.then(data => {
+
+    const ctx = document.getElementById('graficoHistorico')
+
+    if(graficoHistorico){
+        graficoHistorico.destroy()
+    }
+
+    graficoHistorico = new Chart(ctx, {
+
+        type:'line',
+
+        data:{
+            labels:data.datas,
+            datasets:[{
+                label:'Relação (%)',
+                data:data.relacoes,
+                borderColor:'blue',
+                fill:false
+            }]
+        },
+
+        options:{
+            responsive:true,
+            scales:{
+                y:{
+                    min:40,
+                    max:100
+                }
+            }
+        }
+
+    })
+
+})
+}
+
+</script>
+
+<style>
+    .chart-box {
+        position: relative;
+        width: 100%;
+        height: 320px;
+        overflow: hidden;
+    }
+
+    .chart-box canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .tabela-bloco {
+        border-radius: 14px;
+    }
+
+    .secao-titulo {
+        margin-bottom: 20px;
+        font-weight: 700;
+        border-left: 5px solid #6c2bd9;
+        padding-left: 12px;
+    }
+
+    .tabela-dashboard {
+        table-layout: auto;
+        width: 100%;
+        font-size: 0.95rem;
+    }
+
+    .tabela-dashboard thead th {
+        text-align: center;
+        padding: 14px 12px;
+        white-space: nowrap;
+    }
+
+    .tabela-dashboard tbody td {
+        text-align: center;
+        padding: 12px 14px;
+        white-space: nowrap;
+    }
+
+    .tabela-dashboard tbody tr:hover {
+        filter: brightness(0.97);
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .relacao-baixa {
+        background-color: #fff3cd !important;
+    }
+
+    .relacao-normal {
+        background-color: #e7f1ff !important;
+    }
+
+    .relacao-alta {
+        background-color: #fde2e1 !important;
+    }
+</style>
+{% endblock %}

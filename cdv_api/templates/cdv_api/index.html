@@ -28,8 +28,12 @@
 
 <!-- Botão para acessar relatórios Excel -->
 <div style="margin-top: 40px; text-align: center;">
-    <a href="{'gerar_relatorio_excel'}" class="btn btn-outline-success" style="padding: 10px 20px; font-size: 16px; border-radius: 8px;">
+    <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn btn-outline-success" style="padding: 10px 20px; font-size: 16px; border-radius: 8px;">
         📊 Ir para Relatórios Excel
+    </a>
+
+    <a href="{% url 'dashboard_manutencao' %}" class="btn btn-outline-success" style="padding: 10px 20px; font-size: 16px; border-radius: 8px;">
+        📊 Dashboard de Manutenção
     </a>
 </div>
 

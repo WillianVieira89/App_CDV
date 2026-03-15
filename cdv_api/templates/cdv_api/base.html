@@ -28,19 +28,36 @@
     <header>
         <div class="logo-container">
             <a href="{% url 'index' %}">
-                <img src="{% static 'img/logo.png' %}" alt="" class="logo">
+                <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo">
             </a>
         </div>
-        <nav>
-            {% if user.is_authenticated %}
-            <!-- Para simplificar e evitar CSRF no logout, vamos usar GET -->
-            <a href="{% url 'logout' %}?next={% url 'login' %}">Sair</a>
-            {% else %}
-                <p><a href="{% url 'login' %}">Login</a></p>
-            {% endif %}
-        </nav>
 
+        <nav class="main-nav">
+            {% if user.is_authenticated %}
+
+        <a href="{% url 'index' %}"
+           class="{% if request.path == '/' %}active{% endif %}">
+            Registro CDV
+        </a>
+
+        <a href="{% url 'gerar_relatorio_excel_page' %}"
+           class="{% if 'gerar_relatorio_excel' in request.path %}active{% endif %}">
+            Gerar Excel
+        </a>
+
+        <a href="{% url 'dashboard_manutencao' %}"
+           class="{% if 'dashboard' in request.path %}active{% endif %}">
+            Dashboard
+        </a>
+
+        <a href="{% url 'logout' %}?next={% url 'login' %}">Sair</a>
+
+    {% else %}
+        <a href="{% url 'login' %}">Login</a>
+    {% endif %}
+</nav>
     </header>
+
     <div class="content">
         {% block content %}
         {% endblock %}

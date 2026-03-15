@@ -11,6 +11,51 @@ body {
     padding-bottom: 20px; /* Adiciona espaço inferior para o footer, se houver */
 }
 
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: #6c2bd9;
+}
+
+.main-nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+.main-nav a:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.main-nav a.active {
+    background-color: white;
+    color: #6c2bd9;
+}
+
+.logo {
+    height: 50px;
+}
+
+.main-nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.main-nav a {
+    color:  #A855F7;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.main-nav a:hover {
+    text-decoration: underline;
+}
+
 h1, h2, h3 {
     color: #A855F7; /* Primária */
     text-align: center; /* Centraliza os títulos */
