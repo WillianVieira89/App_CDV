@@ -1,29 +1,26 @@
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 import os
 
-
 class Command(BaseCommand):
-    help = "Cria superusuário automaticamente se as variáveis existirem."
+    help = "Cria superusuário automaticamente se não existir"
 
-    def handle(self, *args, **options):
-        username = os.getenv("SU_USERNAME")
-        email = os.getenv("SU_EMAIL")
-        password = os.getenv("SU_PASSWORD")
+    def handle(self, *args, **kwargs):
+        username = os.getenv("SU_USERNAME", "admin")
+        email = os.getenv("SU_EMAIL", "admin@email.com")
+        password = os.getenv("SU_PASSWORD", "admin123")
 
-        if not username or not email or not password:
-            self.stdout.write("Variáveis de superusuário não definidas. Nada a fazer.")
+        # 🔥 CORREÇÃO: verifica qualquer superuser existente
+        if User.objects.filter(is_superuser=True).exists():
+            print("✅ Superusuário já existe. Pulando criação.")
             return
 
-        User = get_user_model()
-
-        if User.objects.filter(username=username).exists():
-            self.stdout.write(f"Superusuário '{username}' já existe.")
-            return
+        print("🔥 Criando superusuário...")
 
         User.objects.create_superuser(
             username=username,
             email=email,
-            password=password,
+            password=password
         )
-        self.stdout.write(self.style.SUCCESS(f"Superusuário '{username}' criado com sucesso."))
+
+        print("✅ Superusuário criado com sucesso!")
