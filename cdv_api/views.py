@@ -664,130 +664,13 @@ def gerar_excel_estacao(request):
         except Exception:
             return None
 
-    tipo_manutencao = norm_tipo(tipo_manutencao_raw)
+    def sanitize_sheet_title(title):
+        invalid = ['\\', '/', '*', '?', ':', '[', ']']
+        for ch in invalid:
+            title = title.replace(ch, "-")
+        return title[:31]
 
-    if estacao_id:
-        estacao = get_object_or_404(Estacao, id=estacao_id)
-        transmissores = Transmissor.objects.filter(estacao=estacao)
-        receptores = Receptor.objects.filter(estacao=estacao)
-        nome_arquivo = f"dados_{estacao.nome}.xlsx"
-    else:
-        estacao = None
-        transmissores = Transmissor.objects.all()
-        receptores = Receptor.objects.all()
-        nome_arquivo = "dados_todas_estacoes.xlsx"
-
-    if circuito_filtro:
-        transmissores = transmissores.filter(num_circuito__icontains=circuito_filtro)
-        receptores = receptores.filter(num_circuito__icontains=circuito_filtro)
-
-    if tipo_manutencao in {"preventiva", "corretiva", "checklist"}:
-        transmissores = transmissores.filter(tipo_manutencao=tipo_manutencao)
-        receptores = receptores.filter(tipo_manutencao=tipo_manutencao)
-
-    data_inicio = _parse_date(data_inicio_str) if data_inicio_str else None
-    data_fim = _parse_date(data_fim_str) if data_fim_str else None
-
-    if data_inicio and data_fim:
-        data_fim_ajustada = data_fim + timezone.timedelta(days=1)
-        transmissores = transmissores.filter(
-            data_manutencao__date__gte=data_inicio,
-            data_manutencao__date__lt=data_fim_ajustada,
-        )
-        receptores = receptores.filter(
-            data_manutencao__date__gte=data_inicio,
-            data_manutencao__date__lt=data_fim_ajustada,
-        )
-    elif data_inicio:
-        transmissores = transmissores.filter(data_manutencao__date__gte=data_inicio)
-        receptores = receptores.filter(data_manutencao__date__gte=data_inicio)
-    elif data_fim:
-        data_fim_ajustada = data_fim + timezone.timedelta(days=1)
-        transmissores = transmissores.filter(data_manutencao__date__lt=data_fim_ajustada)
-        receptores = receptores.filter(data_manutencao__date__lt=data_fim_ajustada)
-
-    transmissores = transmissores.exclude(temp_celsius__isnull=True)
-    receptores = receptores.exclude(temp_celsius__isnull=True)
-
-    transmissores = transmissores.order_by("estacao__nome", "data_manutencao", "horario_coleta", "id")
-    receptores = receptores.order_by("estacao__nome", "data_manutencao", "horario_coleta", "id")
-
-    wb = openpyxl.Workbook()
-
-    # TX
-    ws_tx = wb.active
-    ws_tx.title = "Transmissores"
-    ws_tx.append([
-        "Estação", "Circuito", "TX", "VOUT", "POUT", "TAP", "Tipo TX",
-        "Tipo Manutenção", "Data", "Horário Coleta", "Temp. (Celsius)"
-    ])
-
-    for t in transmissores:
-        dt = timezone.localtime(t.data_manutencao) if t.data_manutencao else None
-        data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
-        hora_fmt = t.horario_coleta.strftime("%H:%M") if t.horario_coleta else "-"
-
-        ws_tx.append([
-            t.estacao.nome if t.estacao else "-",
-            t.num_circuito,
-            safe_int(t.num_transmissor),
-            t.vout,
-            t.pout,
-            safe_int(t.tap),
-            t.tipo_transmissor,
-            t.tipo_manutencao,
-            data_fmt,
-            hora_fmt,
-            t.temp_celsius,
-        ])
-
-    # RX
-    ws_rx = wb.create_sheet("Receptores")
-    ws_rx.append([
-        "Estação", "Circuito", "RX", "IAV", "ITH", "Relação", "Tipo Manutenção",
-        "Data", "Horário Coleta", "Temp. (Celsius)"
-    ])
-
-    linha_inicio_rx = ws_rx.max_row + 1
-
-    for r in receptores:
-        dt = timezone.localtime(r.data_manutencao) if r.data_manutencao else None
-        data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
-        hora_fmt = r.horario_coleta.strftime("%H:%M") if r.horario_coleta else "-"
-
-        rel_excel = None
-        if r.relacao and str(r.relacao).replace("%", "").strip():
-            try:
-                rel_excel = float(str(r.relacao).replace("%", "")) / 100.0
-            except ValueError:
-                rel_excel = None
-
-        ws_rx.append([
-            r.estacao.nome if r.estacao else "-",
-            r.num_circuito,
-            safe_int(r.num_receptor),
-            r.iav,
-            r.ith,
-            rel_excel,
-            r.tipo_manutencao,
-            data_fmt,
-            hora_fmt,
-            r.temp_celsius,
-        ])
-
-    col_rel = get_column_letter(6)
-    linha_fim_rx = ws_rx.max_row
-
-    for row in range(linha_inicio_rx, linha_fim_rx + 1):
-        ws_rx[f"{col_rel}{row}"].number_format = "0.00%"
-
-    for ws in (ws_tx, ws_rx):
-        last_col = ws.max_column
-        for col_cells in ws.iter_cols(min_col=last_col, max_col=last_col, min_row=2, max_row=ws.max_row):
-            for c in col_cells:
-                c.number_format = "0.0"
-
-    for ws in (ws_tx, ws_rx):
+    def aplicar_largura_colunas(ws):
         for col in ws.columns:
             max_len = 0
             col_letter = get_column_letter(col[0].column)
@@ -797,22 +680,37 @@ def gerar_excel_estacao(request):
                 max_len = max(max_len, l)
             ws.column_dimensions[col_letter].width = min(max_len + 2, 30)
 
-    if linha_fim_rx >= linha_inicio_rx:
+    def aplicar_formatacao_rx(ws):
+        linha_inicio_rx = 2
+        linha_fim_rx = ws.max_row
+        col_rel = get_column_letter(6)
+
+        if linha_fim_rx < linha_inicio_rx:
+            return
+
+        for row in range(linha_inicio_rx, linha_fim_rx + 1):
+            ws[f"{col_rel}{row}"].number_format = "0.00%"
+
+        last_col = ws.max_column
+        for col_cells in ws.iter_cols(min_col=last_col, max_col=last_col, min_row=2, max_row=ws.max_row):
+            for c in col_cells:
+                c.number_format = "0.0"
+
         intervalo = f"{col_rel}{linha_inicio_rx}:{col_rel}{linha_fim_rx}"
         fill_red = PatternFill(start_color="FFFFC7CE", end_color="FFFFC7CE", fill_type="solid")
         font_red = Font(color="FF9C0006")
         fill_green = PatternFill(start_color="FFC6EFCE", end_color="FFC6EFCE", fill_type="solid")
         font_green = Font(color="FF006100")
 
-        ws_rx.conditional_formatting.add(
+        ws.conditional_formatting.add(
             intervalo,
             CellIsRule(operator="lessThan", formula=["0.6"], fill=fill_red, font=font_red)
         )
-        ws_rx.conditional_formatting.add(
+        ws.conditional_formatting.add(
             intervalo,
             CellIsRule(operator="greaterThan", formula=["0.8"], fill=fill_red, font=font_red)
         )
-        ws_rx.conditional_formatting.add(
+        ws.conditional_formatting.add(
             intervalo,
             FormulaRule(
                 formula=[f"AND({col_rel}{linha_inicio_rx}>=0.6,{col_rel}{linha_inicio_rx}<=0.8)"],
@@ -820,6 +718,132 @@ def gerar_excel_estacao(request):
                 font=font_green,
             )
         )
+
+    def aplicar_formatacao_tx(ws):
+        last_col = ws.max_column
+        for col_cells in ws.iter_cols(min_col=last_col, max_col=last_col, min_row=2, max_row=ws.max_row):
+            for c in col_cells:
+                c.number_format = "0.0"
+
+    tipo_manutencao = norm_tipo(tipo_manutencao_raw)
+    data_inicio = _parse_date(data_inicio_str) if data_inicio_str else None
+    data_fim = _parse_date(data_fim_str) if data_fim_str else None
+
+    if estacao_id:
+        estacoes = Estacao.objects.filter(id=estacao_id).order_by("nome")
+        nome_arquivo = f"dados_estacao_{estacoes.first().nome}.xlsx" if estacoes.exists() else "dados_estacao.xlsx"
+    else:
+        estacoes = Estacao.objects.all().order_by("nome")
+        nome_arquivo = "dados_todas_estacoes.xlsx"
+
+    if not estacoes.exists():
+        return HttpResponse("Nenhuma estação encontrada.", status=404)
+
+    wb = openpyxl.Workbook()
+    # remove a aba padrão; criaremos as nossas
+    ws_default = wb.active
+    wb.remove(ws_default)
+
+    for estacao in estacoes:
+        transmissores = Transmissor.objects.filter(estacao=estacao)
+        receptores = Receptor.objects.filter(estacao=estacao)
+
+        if circuito_filtro:
+            transmissores = transmissores.filter(num_circuito__icontains=circuito_filtro)
+            receptores = receptores.filter(num_circuito__icontains=circuito_filtro)
+
+        if tipo_manutencao in {"preventiva", "corretiva", "checklist"}:
+            transmissores = transmissores.filter(tipo_manutencao=tipo_manutencao)
+            receptores = receptores.filter(tipo_manutencao=tipo_manutencao)
+
+        if data_inicio and data_fim:
+            data_fim_ajustada = data_fim + timezone.timedelta(days=1)
+            transmissores = transmissores.filter(
+                data_manutencao__date__gte=data_inicio,
+                data_manutencao__date__lt=data_fim_ajustada,
+            )
+            receptores = receptores.filter(
+                data_manutencao__date__gte=data_inicio,
+                data_manutencao__date__lt=data_fim_ajustada,
+            )
+        elif data_inicio:
+            transmissores = transmissores.filter(data_manutencao__date__gte=data_inicio)
+            receptores = receptores.filter(data_manutencao__date__gte=data_inicio)
+        elif data_fim:
+            data_fim_ajustada = data_fim + timezone.timedelta(days=1)
+            transmissores = transmissores.filter(data_manutencao__date__lt=data_fim_ajustada)
+            receptores = receptores.filter(data_manutencao__date__lt=data_fim_ajustada)
+
+        transmissores = transmissores.exclude(temp_celsius__isnull=True).order_by(
+            "data_manutencao", "horario_coleta", "id"
+        )
+        receptores = receptores.exclude(temp_celsius__isnull=True).order_by(
+            "data_manutencao", "horario_coleta", "id"
+        )
+
+        # Aba TX
+        ws_tx = wb.create_sheet(title=sanitize_sheet_title(f"TX - {estacao.nome}"))
+        ws_tx.append([
+            "Estação", "Circuito", "TX", "VOUT", "POUT", "TAP", "Tipo TX",
+            "Tipo Manutenção", "Data", "Horário Coleta", "Temp. (Celsius)"
+        ])
+
+        for t in transmissores:
+            dt = timezone.localtime(t.data_manutencao) if t.data_manutencao else None
+            data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
+            hora_fmt = t.horario_coleta.strftime("%H:%M") if t.horario_coleta else "-"
+
+            ws_tx.append([
+                estacao.nome,
+                t.num_circuito,
+                safe_int(t.num_transmissor),
+                t.vout,
+                t.pout,
+                safe_int(t.tap),
+                t.tipo_transmissor,
+                t.tipo_manutencao,
+                data_fmt,
+                hora_fmt,
+                t.temp_celsius,
+            ])
+
+        aplicar_formatacao_tx(ws_tx)
+        aplicar_largura_colunas(ws_tx)
+
+        # Aba RX
+        ws_rx = wb.create_sheet(title=sanitize_sheet_title(f"RX - {estacao.nome}"))
+        ws_rx.append([
+            "Estação", "Circuito", "RX", "IAV", "ITH", "Relação", "Tipo Manutenção",
+            "Data", "Horário Coleta", "Temp. (Celsius)"
+        ])
+
+        for r in receptores:
+            dt = timezone.localtime(r.data_manutencao) if r.data_manutencao else None
+            data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
+            hora_fmt = r.horario_coleta.strftime("%H:%M") if r.horario_coleta else "-"
+
+            rel_excel = None
+            if r.relacao and str(r.relacao).replace("%", "").strip():
+                try:
+                    rel_excel = float(str(r.relacao).replace("%", "")) / 100.0
+                except ValueError:
+                    rel_excel = None
+
+            ws_rx.append([
+                estacao.nome,
+                r.num_circuito,
+                safe_int(r.num_receptor),
+                r.iav,
+                r.ith,
+                rel_excel,
+                r.tipo_manutencao,
+                data_fmt,
+                hora_fmt,
+                r.temp_celsius,
+            ])
+
+        aplicar_formatacao_rx(ws_rx)
+        aplicar_largura_colunas(ws_rx)
 
     resp = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
