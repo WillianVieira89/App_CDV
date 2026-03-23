@@ -1,7 +1,5 @@
 {% extends 'cdv_api/base.html' %}
 
-
-
 {% block title %}Gerar Relatório Excel{% endblock %}
 
 {% block content %}
@@ -27,7 +25,7 @@
             {{ message }}
         </div>
 
-        <button class="alert-close" onclick="this.parentElement.style.display='none'">
+        <button class="alert-close" onclick="fecharAlerta(this)">
             ✖
         </button>
 
@@ -120,6 +118,27 @@
 {% endblock %}
 
 {% block extra_body %}
+
+<script>
+function fecharAlerta(botao) {
+    const alerta = botao.parentElement;
+    alerta.classList.add("fade-out");
+    setTimeout(() => alerta.remove(), 300);
+}
+
+// 🔥 AUTO FECHAR EM 4 SEGUNDOS
+document.addEventListener("DOMContentLoaded", function () {
+    const alertas = document.querySelectorAll(".alert-custom");
+
+    alertas.forEach(alerta => {
+        setTimeout(() => {
+            alerta.classList.add("fade-out");
+            setTimeout(() => alerta.remove(), 300);
+        }, 4000);
+    });
+});
+</script>
+
 <style>
     .painel-filtros{
         background:#ffffff;
