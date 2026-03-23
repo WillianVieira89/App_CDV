@@ -165,17 +165,3 @@ else:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = False
-    
-import os
-
-if os.getenv("ENV") == "PROD" and os.getenv("CREATE_SUPERUSER") == "True":
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-
-    username = os.getenv("SU_USERNAME", "admin")
-    email = os.getenv("SU_EMAIL", "admin@email.com")
-    password = os.getenv("SU_PASSWORD", "admin123")
-
-    if not User.objects.filter(username=username).exists():
-        print("🔥 Criando superusuário automaticamente...")
-        User.objects.create_superuser(username, email, password)
