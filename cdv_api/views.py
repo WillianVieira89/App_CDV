@@ -666,13 +666,16 @@ def gerar_excel_estacao(request):
 
     tipo_manutencao = norm_tipo(tipo_manutencao_raw)
 
-    if not estacao_id:
-        return HttpResponse("Estação não informada", status=400)
-
-    estacao = get_object_or_404(Estacao, id=estacao_id)
-
-    transmissores = Transmissor.objects.filter(estacao=estacao)
-    receptores = Receptor.objects.filter(estacao=estacao)
+    if estacao_id:
+        estacao = get_object_or_404(Estacao, id=estacao_id)
+        transmissores = Transmissor.objects.filter(estacao=estacao)
+        receptores = Receptor.objects.filter(estacao=estacao)
+        nome_arquivo = f"dados_{estacao.nome}.xlsx"
+    else:
+        estacao = None
+        transmissores = Transmissor.objects.all()
+        receptores = Receptor.objects.all()
+        nome_arquivo = "dados_todas_estacoes.xlsx"
 
     if circuito_filtro:
         transmissores = transmissores.filter(num_circuito__icontains=circuito_filtro)
@@ -706,8 +709,8 @@ def gerar_excel_estacao(request):
     transmissores = transmissores.exclude(temp_celsius__isnull=True)
     receptores = receptores.exclude(temp_celsius__isnull=True)
 
-    transmissores = transmissores.order_by("data_manutencao", "horario_coleta", "id")
-    receptores = receptores.order_by("data_manutencao", "horario_coleta", "id")
+    transmissores = transmissores.order_by("estacao__nome", "data_manutencao", "horario_coleta", "id")
+    receptores = receptores.order_by("estacao__nome", "data_manutencao", "horario_coleta", "id")
 
     wb = openpyxl.Workbook()
 
@@ -725,7 +728,7 @@ def gerar_excel_estacao(request):
         hora_fmt = t.horario_coleta.strftime("%H:%M") if t.horario_coleta else "-"
 
         ws_tx.append([
-            estacao.nome,
+            t.estacao.nome if t.estacao else "-",
             t.num_circuito,
             safe_int(t.num_transmissor),
             t.vout,
@@ -753,14 +756,14 @@ def gerar_excel_estacao(request):
         hora_fmt = r.horario_coleta.strftime("%H:%M") if r.horario_coleta else "-"
 
         rel_excel = None
-        if r.relacao and r.relacao.replace("%", "").strip():
+        if r.relacao and str(r.relacao).replace("%", "").strip():
             try:
-                rel_excel = float(r.relacao.replace("%", "")) / 100.0
+                rel_excel = float(str(r.relacao).replace("%", "")) / 100.0
             except ValueError:
                 rel_excel = None
 
         ws_rx.append([
-            estacao.nome,
+            r.estacao.nome if r.estacao else "-",
             r.num_circuito,
             safe_int(r.num_receptor),
             r.iav,
@@ -794,33 +797,34 @@ def gerar_excel_estacao(request):
                 max_len = max(max_len, l)
             ws.column_dimensions[col_letter].width = min(max_len + 2, 30)
 
-    intervalo = f"{col_rel}{linha_inicio_rx}:{col_rel}{linha_fim_rx}"
-    fill_red = PatternFill(start_color="FFFFC7CE", end_color="FFFFC7CE", fill_type="solid")
-    font_red = Font(color="FF9C0006")
-    fill_green = PatternFill(start_color="FFC6EFCE", end_color="FFC6EFCE", fill_type="solid")
-    font_green = Font(color="FF006100")
+    if linha_fim_rx >= linha_inicio_rx:
+        intervalo = f"{col_rel}{linha_inicio_rx}:{col_rel}{linha_fim_rx}"
+        fill_red = PatternFill(start_color="FFFFC7CE", end_color="FFFFC7CE", fill_type="solid")
+        font_red = Font(color="FF9C0006")
+        fill_green = PatternFill(start_color="FFC6EFCE", end_color="FFC6EFCE", fill_type="solid")
+        font_green = Font(color="FF006100")
 
-    ws_rx.conditional_formatting.add(
-        intervalo,
-        CellIsRule(operator="lessThan", formula=["0.6"], fill=fill_red, font=font_red)
-    )
-    ws_rx.conditional_formatting.add(
-        intervalo,
-        CellIsRule(operator="greaterThan", formula=["0.8"], fill=fill_red, font=font_red)
-    )
-    ws_rx.conditional_formatting.add(
-        intervalo,
-        FormulaRule(
-            formula=[f"AND({col_rel}{linha_inicio_rx}>=0.6,{col_rel}{linha_inicio_rx}<=0.8)"],
-            fill=fill_green,
-            font=font_green,
+        ws_rx.conditional_formatting.add(
+            intervalo,
+            CellIsRule(operator="lessThan", formula=["0.6"], fill=fill_red, font=font_red)
         )
-    )
+        ws_rx.conditional_formatting.add(
+            intervalo,
+            CellIsRule(operator="greaterThan", formula=["0.8"], fill=fill_red, font=font_red)
+        )
+        ws_rx.conditional_formatting.add(
+            intervalo,
+            FormulaRule(
+                formula=[f"AND({col_rel}{linha_inicio_rx}>=0.6,{col_rel}{linha_inicio_rx}<=0.8)"],
+                fill=fill_green,
+                font=font_green,
+            )
+        )
 
     resp = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    resp["Content-Disposition"] = f'attachment; filename="dados_{estacao.nome}.xlsx"'
+    resp["Content-Disposition"] = f'attachment; filename="{nome_arquivo}"'
     wb.save(resp)
     return resp
 
