@@ -1,8 +1,41 @@
 {% extends 'cdv_api/base.html' %}
 
+
+
 {% block title %}Gerar Relatório Excel{% endblock %}
 
 {% block content %}
+
+    {% if messages %}
+    <div class="alert-container">
+    {% for message in messages %}
+        <div class="alert-custom {{ message.tags }}">
+        
+        <div class="alert-icon">
+            {% if message.tags == 'error' %}
+            ⚠️
+            {% elif message.tags == 'success' %}
+            ✅
+            {% elif message.tags == 'warning' %}
+            ⚠️
+            {% else %}
+            ℹ️
+            {% endif %}
+        </div>
+
+        <div class="alert-text">
+            {{ message }}
+        </div>
+
+        <button class="alert-close" onclick="this.parentElement.style.display='none'">
+            ✖
+        </button>
+
+        </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+
 <div class="container mt-4">
 
     <h2 class="mb-4">

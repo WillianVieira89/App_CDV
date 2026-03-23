@@ -4,6 +4,7 @@ import datetime
 from collections import defaultdict
 
 import openpyxl
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
@@ -680,23 +681,16 @@ def gerar_excel_estacao(request):
                 max_len = max(max_len, l)
             ws.column_dimensions[col_letter].width = min(max_len + 2, 30)
 
-    def aplicar_formatacao_rx(ws):
-        linha_inicio_rx = 2
-        linha_fim_rx = ws.max_row
-        col_rel = get_column_letter(6)
-
-        if linha_fim_rx < linha_inicio_rx:
+    def aplicar_formatacao_relacao(ws, linha_inicio, linha_fim, col_idx=6):
+        if linha_fim < linha_inicio:
             return
 
-        for row in range(linha_inicio_rx, linha_fim_rx + 1):
+        col_rel = get_column_letter(col_idx)
+
+        for row in range(linha_inicio, linha_fim + 1):
             ws[f"{col_rel}{row}"].number_format = "0.00%"
 
-        last_col = ws.max_column
-        for col_cells in ws.iter_cols(min_col=last_col, max_col=last_col, min_row=2, max_row=ws.max_row):
-            for c in col_cells:
-                c.number_format = "0.0"
-
-        intervalo = f"{col_rel}{linha_inicio_rx}:{col_rel}{linha_fim_rx}"
+        intervalo = f"{col_rel}{linha_inicio}:{col_rel}{linha_fim}"
         fill_red = PatternFill(start_color="FFFFC7CE", end_color="FFFFC7CE", fill_type="solid")
         font_red = Font(color="FF9C0006")
         fill_green = PatternFill(start_color="FFC6EFCE", end_color="FFC6EFCE", fill_type="solid")
@@ -713,17 +707,19 @@ def gerar_excel_estacao(request):
         ws.conditional_formatting.add(
             intervalo,
             FormulaRule(
-                formula=[f"AND({col_rel}{linha_inicio_rx}>=0.6,{col_rel}{linha_inicio_rx}<=0.8)"],
+                formula=[f"AND({col_rel}{linha_inicio}>=0.6,{col_rel}{linha_inicio}<=0.8)"],
                 fill=fill_green,
                 font=font_green,
             )
         )
 
-    def aplicar_formatacao_tx(ws):
-        last_col = ws.max_column
-        for col_cells in ws.iter_cols(min_col=last_col, max_col=last_col, min_row=2, max_row=ws.max_row):
-            for c in col_cells:
-                c.number_format = "0.0"
+    def aplicar_formatacao_temperatura(ws, col_idx, linha_inicio, linha_fim):
+        if linha_fim < linha_inicio:
+            return
+
+        col_letter = get_column_letter(col_idx)
+        for row in range(linha_inicio, linha_fim + 1):
+            ws[f"{col_letter}{row}"].number_format = "0.0"
 
     tipo_manutencao = norm_tipo(tipo_manutencao_raw)
     data_inicio = _parse_date(data_inicio_str) if data_inicio_str else None
@@ -731,18 +727,23 @@ def gerar_excel_estacao(request):
 
     if estacao_id:
         estacoes = Estacao.objects.filter(id=estacao_id).order_by("nome")
-        nome_arquivo = f"dados_estacao_{estacoes.first().nome}.xlsx" if estacoes.exists() else "dados_estacao.xlsx"
+        if not estacoes.exists():
+            messages.error(request, "Estação selecionada não foi encontrada.")
+            return redirect("gerar_relatorio_excel_page")
+        nome_arquivo = f"dados_estacao_{estacoes.first().nome}.xlsx"
     else:
         estacoes = Estacao.objects.all().order_by("nome")
         nome_arquivo = "dados_todas_estacoes.xlsx"
 
     if not estacoes.exists():
-        return HttpResponse("Nenhuma estação encontrada.", status=404)
+        messages.error(request, "Nenhuma estação cadastrada foi encontrada.")
+        return redirect("gerar_relatorio_excel_page")
 
     wb = openpyxl.Workbook()
-    # remove a aba padrão; criaremos as nossas
     ws_default = wb.active
     wb.remove(ws_default)
+
+    total_abas_criadas = 0
 
     for estacao in estacoes:
         transmissores = Transmissor.objects.filter(estacao=estacao)
@@ -774,76 +775,113 @@ def gerar_excel_estacao(request):
             transmissores = transmissores.filter(data_manutencao__date__lt=data_fim_ajustada)
             receptores = receptores.filter(data_manutencao__date__lt=data_fim_ajustada)
 
-        transmissores = transmissores.exclude(temp_celsius__isnull=True).order_by(
-            "data_manutencao", "horario_coleta", "id"
+        transmissores = list(
+            transmissores.exclude(temp_celsius__isnull=True).order_by(
+                "data_manutencao", "horario_coleta", "id"
+            )
         )
-        receptores = receptores.exclude(temp_celsius__isnull=True).order_by(
-            "data_manutencao", "horario_coleta", "id"
+        receptores = list(
+            receptores.exclude(temp_celsius__isnull=True).order_by(
+                "data_manutencao", "horario_coleta", "id"
+            )
         )
 
-        # Aba TX
-        ws_tx = wb.create_sheet(title=sanitize_sheet_title(f"TX - {estacao.nome}"))
-        ws_tx.append([
-            "Estação", "Circuito", "TX", "VOUT", "POUT", "TAP", "Tipo TX",
-            "Tipo Manutenção", "Data", "Horário Coleta", "Temp. (Celsius)"
-        ])
+        if not transmissores and not receptores:
+            continue
 
-        for t in transmissores:
-            dt = timezone.localtime(t.data_manutencao) if t.data_manutencao else None
-            data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
-            hora_fmt = t.horario_coleta.strftime("%H:%M") if t.horario_coleta else "-"
+        ws = wb.create_sheet(title=sanitize_sheet_title(estacao.nome))
+        total_abas_criadas += 1
 
-            ws_tx.append([
-                estacao.nome,
-                t.num_circuito,
-                safe_int(t.num_transmissor),
-                t.vout,
-                t.pout,
-                safe_int(t.tap),
-                t.tipo_transmissor,
-                t.tipo_manutencao,
-                data_fmt,
-                hora_fmt,
-                t.temp_celsius,
-            ])
+        ws["A1"] = f"ESTAÇÃO: {estacao.nome}"
+        linha_atual = 3
 
-        aplicar_formatacao_tx(ws_tx)
-        aplicar_largura_colunas(ws_tx)
+        if transmissores:
+            ws.cell(row=linha_atual, column=1, value="TRANSMISSORES (TX)")
+            linha_atual += 1
 
-        # Aba RX
-        ws_rx = wb.create_sheet(title=sanitize_sheet_title(f"RX - {estacao.nome}"))
-        ws_rx.append([
-            "Estação", "Circuito", "RX", "IAV", "ITH", "Relação", "Tipo Manutenção",
-            "Data", "Horário Coleta", "Temp. (Celsius)"
-        ])
+            headers_tx = [
+                "Estação", "Circuito", "TX", "VOUT", "POUT", "TAP", "Tipo TX",
+                "Tipo Manutenção", "Data", "Horário Coleta", "Temp. (Celsius)"
+            ]
+            for col_idx, header in enumerate(headers_tx, start=1):
+                ws.cell(row=linha_atual, column=col_idx, value=header)
 
-        for r in receptores:
-            dt = timezone.localtime(r.data_manutencao) if r.data_manutencao else None
-            data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
-            hora_fmt = r.horario_coleta.strftime("%H:%M") if r.horario_coleta else "-"
+            linha_inicio_tx = linha_atual + 1
+            linha_atual += 1
 
-            rel_excel = None
-            if r.relacao and str(r.relacao).replace("%", "").strip():
-                try:
-                    rel_excel = float(str(r.relacao).replace("%", "")) / 100.0
-                except ValueError:
-                    rel_excel = None
+            for t in transmissores:
+                dt = timezone.localtime(t.data_manutencao) if t.data_manutencao else None
+                data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
+                hora_fmt = t.horario_coleta.strftime("%H:%M") if t.horario_coleta else "-"
 
-            ws_rx.append([
-                estacao.nome,
-                r.num_circuito,
-                safe_int(r.num_receptor),
-                r.iav,
-                r.ith,
-                rel_excel,
-                r.tipo_manutencao,
-                data_fmt,
-                hora_fmt,
-                r.temp_celsius,
-            ])
+                ws.append([
+                    estacao.nome,
+                    t.num_circuito,
+                    safe_int(t.num_transmissor),
+                    t.vout,
+                    t.pout,
+                    safe_int(t.tap),
+                    t.tipo_transmissor,
+                    t.tipo_manutencao,
+                    data_fmt,
+                    hora_fmt,
+                    t.temp_celsius,
+                ])
+                linha_atual += 1
 
-        aplicar_formatacao_rx(ws_rx)
-        aplicar_largura_colunas(ws_rx)
+            linha_fim_tx = linha_atual - 1
+            aplicar_formatacao_temperatura(ws, 11, linha_inicio_tx, linha_fim_tx)
+            linha_atual += 2
+
+        if receptores:
+            ws.cell(row=linha_atual, column=1, value="RECEPTORES (RX)")
+            linha_atual += 1
+
+            headers_rx = [
+                "Estação", "Circuito", "RX", "IAV", "ITH", "Relação", "Tipo Manutenção",
+                "Data", "Horário Coleta", "Temp. (Celsius)"
+            ]
+            for col_idx, header in enumerate(headers_rx, start=1):
+                ws.cell(row=linha_atual, column=col_idx, value=header)
+
+            linha_inicio_rx = linha_atual + 1
+            linha_atual += 1
+
+            for r in receptores:
+                dt = timezone.localtime(r.data_manutencao) if r.data_manutencao else None
+                data_fmt = dt.strftime("%d/%m/%Y") if dt else "-"
+                hora_fmt = r.horario_coleta.strftime("%H:%M") if r.horario_coleta else "-"
+
+                rel_excel = None
+                if r.relacao and str(r.relacao).replace("%", "").strip():
+                    try:
+                        rel_excel = float(str(r.relacao).replace("%", "")) / 100.0
+                    except ValueError:
+                        rel_excel = None
+
+                ws.append([
+                    estacao.nome,
+                    r.num_circuito,
+                    safe_int(r.num_receptor),
+                    r.iav,
+                    r.ith,
+                    rel_excel,
+                    r.tipo_manutencao,
+                    data_fmt,
+                    hora_fmt,
+                    r.temp_celsius,
+                ])
+                linha_atual += 1
+
+            linha_fim_rx = linha_atual - 1
+            aplicar_formatacao_relacao(ws, linha_inicio_rx, linha_fim_rx, col_idx=6)
+            aplicar_formatacao_temperatura(ws, 10, linha_inicio_rx, linha_fim_rx)
+
+        aplicar_largura_colunas(ws)
+
+    if total_abas_criadas == 0:
+        messages.error(request, "Nenhum dado encontrado para os filtros selecionados.")
+        return redirect("gerar_relatorio_excel_page")
 
     resp = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
