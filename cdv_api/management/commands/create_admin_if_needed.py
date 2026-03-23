@@ -3,24 +3,27 @@ from django.contrib.auth.models import User
 import os
 
 class Command(BaseCommand):
-    help = "Cria superusuário automaticamente se não existir"
+    help = "Cria ou atualiza superusuário automaticamente"
 
     def handle(self, *args, **kwargs):
         username = os.getenv("SU_USERNAME", "admin")
         email = os.getenv("SU_EMAIL", "admin@email.com")
         password = os.getenv("SU_PASSWORD", "admin123")
 
-        # 🔥 CORREÇÃO: verifica qualquer superuser existente
-        if User.objects.filter(is_superuser=True).exists():
-            print("✅ Superusuário já existe. Pulando criação.")
-            return
-
-        print("🔥 Criando superusuário...")
-
-        User.objects.create_superuser(
+        user, created = User.objects.get_or_create(
             username=username,
-            email=email,
-            password=password
+            defaults={"email": email}
         )
 
-        print("✅ Superusuário criado com sucesso!")
+        if created:
+            print("🔥 Criando superusuário...")
+            user.set_password(password)
+            user.is_superuser = True
+            user.is_staff = True
+            user.save()
+            print("✅ Superusuário criado!")
+        else:
+            print("🔁 Atualizando senha do superusuário...")
+            user.set_password(password)
+            user.save()
+            print("✅ Senha atualizada com sucesso!")
