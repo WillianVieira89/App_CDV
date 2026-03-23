@@ -1,2 +1,21 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Ambiente virtual
+venv/
+
+# Banco local
+db.sqlite3
+
+# Variáveis de ambiente
+.env
+.env.prod
+
+# Arquivos estáticos gerados
+staticfiles/
+
+# OS / IDE
+.DS_Store
+.vscode/

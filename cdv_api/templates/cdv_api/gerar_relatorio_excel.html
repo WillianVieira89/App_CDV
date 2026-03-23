@@ -4,74 +4,328 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Gerar Relatório Excel por Estação, Circuito e Data</h2>
 
-    <form id="form_excel" method="get" action="{% url 'gerar_excel_estacao' %}">
-        {% csrf_token %}
-        
-        <div class="form-group">
-            <label for="estacao_selecionada">Selecionar Estação:</label>
-            <select class="form-control" id="estacao_selecionada" name="estacao_id" required>
-                <option value="">-- Selecione uma Estação --</option>
-                {% for estacao in lista_de_estacoes %}
-                    <option value="{{ estacao.id }}">{{ estacao.nome }}</option>
+    <h2 class="mb-4">
+        Gerar Relatório Excel
+        {% if estacao_nome %}
+            - {{ estacao_nome }}
+        {% endif %}
+    </h2>
+
+    <!-- MAPA PRIMEIRO -->
+
+        <div class="mapa-linha-wrapper">
+            <div class="mapa-linha"></div>
+
+            <div class="mapa-estacoes">
+                <a href="{% url 'gerar_relatorio_excel_page' %}?circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
+                   class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
+                   title="Visualizar toda a linha">
+                    <span class="estacao-ponto"></span>
+                    <span class="estacao-nome">Toda Linha</span>
+                </a>
+
+                {% for est in estacoes_mapa %}
+                <a href="{% url 'gerar_relatorio_excel_page' %}?estacao_id={{ est.id }}&circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
+                   class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}">
+                    <span class="estacao-ponto"></span>
+                    <span class="estacao-nome">{{ est.nome }}</span>
+                </a>
                 {% endfor %}
-            </select>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="circuito_filtro">Número do Circuito (Opcional):</label>
-            <input type="text" class="form-control" id="circuito_filtro" name="circuito_filtro">
+        <div class="legenda-mapa mt-3">
+            <span><span class="legenda-cor toda-linha"></span> Toda Linha</span>
+            <span><span class="legenda-cor normal"></span> Estação</span>
+            <span><span class="legenda-cor selecionada"></span> Selecionada</span>
         </div>
-
-        <div class="form-group">
-            <label for="tipo_manutencao">Tipo de Manutenção (Opcional):</label>
-            <select class="form-control" id="tipo_manutencao" name="tipo_manutencao">
-                <option value="">-- Todos --</option>
-                <option value="preventiva" {% if tipo_manutencao == "preventiva" %}selected{% endif %}>Preventiva</option>
-                <option value="corretiva"  {% if tipo_manutencao == "corretiva"  %}selected{% endif %}>Corretiva</option>
-                <option value="checklist"  {% if tipo_manutencao == "checklist"  %}selected{% endif %}>Checklist</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="data_inicio">Data de Início:</label>
-            <input type="date" class="form-control" id="data_inicio" name="data_inicio">
-        </div>
-
-        <div class="form-group" style="margin-top: 15px;">
-            <label for="data_fim">Data de Fim:</label>
-            <input type="date" class="form-control" id="data_fim" name="data_fim">
-        </div>
-
-        <button type="submit" class="btn btn-primary">Gerar Relatório Excel</button>
-    </form>
-
-    <!-- Área da mensagem de sucesso -->
-    <div id="mensagem_sucesso" style="display: none; margin-top: 20px;" class="alert alert-success">
-        ✅ Relatório gerado com sucesso!
     </div>
+
+    <!-- FILTROS ABAIXO -->
+    <div class="painel-filtros">
+        <div class="faixa-linha5"></div>
+
+        <form method="get" action="{% url 'gerar_excel_estacao' %}" class="grid-filtros">
+            <input type="hidden" name="estacao_id" value="{{ selected_estacao_id }}">
+
+            <div class="campo-filtro">
+                <label for="circuito_filtro">Circuito</label>
+                <input type="text" id="circuito_filtro" name="circuito_filtro" value="{{ circuito_filtro }}">
+            </div>
+
+            <div class="campo-filtro">
+                <label for="tipo_manutencao">Tipo de Manutenção</label>
+                <select id="tipo_manutencao" name="tipo_manutencao">
+                    <option value="">-- Todos --</option>
+                    <option value="preventiva" {% if tipo_manutencao == "preventiva" %}selected{% endif %}>Preventiva</option>
+                    <option value="corretiva" {% if tipo_manutencao == "corretiva" %}selected{% endif %}>Corretiva</option>
+                    <option value="checklist" {% if tipo_manutencao == "checklist" %}selected{% endif %}>Checklist</option>
+                </select>
+            </div>
+
+            <div class="campo-filtro">
+                <label for="data_inicio">Data Início</label>
+                <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio }}">
+            </div>
+
+            <div class="campo-filtro">
+                <label for="data_fim">Data Fim</label>
+                <input type="date" id="data_fim" name="data_fim" value="{{ data_fim }}">
+            </div>
+
+            <div class="acoes-filtro">
+                <button type="submit" class="btn-filtrar">
+                    Gerar Excel
+                </button>
+                    <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn-limpar">Limpar</a>
+            </div>
+        </form>
+    </div>
+
 </div>
+{% endblock %}
 
-<!-- Script para limpar campos e mostrar mensagem -->
-<script>
-    document.getElementById("form_excel").addEventListener("submit", function () {
-        setTimeout(() => {
-            // Limpa os campos
-            document.getElementById("estacao_selecionada").value = "";
-            document.getElementById("circuito_filtro").value = "";
-            document.getElementById("data_inicio").value = "";
-            document.getElementById("data_fim").value = "";
+{% block extra_body %}
+<style>
+    .painel-filtros{
+        background:#ffffff;
+        border-radius:16px;
+        box-shadow:0 4px 14px rgba(0,0,0,0.08);
+        padding:22px 24px 20px 24px;
+        margin-bottom:30px;
+        position:relative;
+    }
 
-            // Mostra a mensagem de sucesso
-            const msg = document.getElementById("mensagem_sucesso");
-            msg.style.display = "block";
+    .faixa-linha5{
+        height:6px;
+        width:100%;
+        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
+        border-radius:999px;
+        margin-bottom:18px;
+    }
 
-            // Oculta a mensagem após 5 segundos
-            setTimeout(() => {
-                msg.style.display = "none";
-            }, 5000);
-        }, 500); // tempo para o envio do formulário ocorrer
-    });
-</script>
+    .grid-filtros{
+        display:grid;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+        gap:18px;
+        align-items:end;
+    }
+
+    .campo-filtro{
+        display:flex;
+        flex-direction:column;
+    }
+
+    .campo-filtro label{
+        font-size:0.85rem;
+        font-weight:700;
+        color:#4b5563;
+        margin-bottom:6px;
+    }
+
+    .campo-filtro input,
+    .campo-filtro select{
+        width:100%;
+        padding:10px 12px;
+        border:1px solid #d1d5db;
+        border-radius:8px;
+        font-size:0.95rem;
+        background:#fff;
+        box-sizing:border-box;
+    }
+
+    .campo-filtro input:focus,
+    .campo-filtro select:focus{
+        outline:none;
+        border-color:#6c2bd9;
+        box-shadow:0 0 0 3px rgba(108,43,217,0.15);
+    }
+
+    .acoes-filtro{
+        display:flex;
+        gap:10px;
+        align-items:end;
+    }
+
+    .btn-filtrar{
+        background:#6c2bd9;
+        color:#fff;
+        border:none;
+        border-radius:8px;
+        padding:10px 16px;
+        font-weight:700;
+        cursor:pointer;
+        transition:0.2s ease;
+    }
+
+    .btn-filtrar:hover{
+        background:#5a21b6;
+    }
+
+    .btn-filtrar:disabled{
+        background:#c4b5fd;
+        cursor:not-allowed;
+    }
+
+    .btn-limpar{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        padding:10px 16px;
+        border-radius:8px;
+        border:1px solid #d1d5db;
+        color:#374151;
+        text-decoration:none;
+        font-weight:600;
+        background:#fff;
+        transition:0.2s ease;
+    }
+
+    .btn-limpar:hover{
+        background:#f9fafb;
+    }
+
+    .alerta-estacao{
+        color:#6b21a8;
+        font-weight:600;
+    }
+
+    /* mapa */
+    .mapa-estacoes-bloco{
+        border-radius:16px;
+        overflow:hidden;
+    }
+
+    .secao-titulo{
+        margin-bottom:20px;
+        font-weight:700;
+        border-left:5px solid #6c2bd9;
+        padding-left:12px;
+    }
+
+    .mapa-linha-wrapper{
+        position:relative;
+        width:100%;
+        max-width:100%;
+        padding:35px 10px 20px 10px;
+        box-sizing:border-box;
+    }
+
+    .mapa-linha{
+        position:absolute;
+        top:45px;
+        left:0;
+        width:100%;
+        height:5px;
+        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
+        border-radius:999px;
+        z-index:1;
+    }
+
+    .mapa-estacoes{
+        position:relative;
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        width:100%;
+        gap:6px;
+        z-index:2;
+    }
+
+    .estacao-no{
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        text-decoration:none;
+        flex:1;
+        min-width:0;
+        color:#1f2937;
+        transition:transform .2s ease;
+    }
+
+    .estacao-no:hover{
+        transform:translateY(-4px);
+    }
+
+    .estacao-ponto{
+        width:22px;
+        height:22px;
+        border-radius:50%;
+        border:4px solid white;
+        box-shadow:0 0 0 3px rgba(0,0,0,0.08);
+        margin-bottom:10px;
+    }
+
+    .estacao-nome{
+        font-size:0.75rem;
+        text-align:center;
+        line-height:1.1;
+        font-weight:600;
+        max-width:70px;
+        white-space:normal;
+    }
+
+    .estacao-normal .estacao-ponto{
+        background:#0d6efd;
+    }
+
+    .mapa-todas .estacao-ponto{
+        background:#6c2bd9;
+    }
+
+    .estacao-selecionada .estacao-ponto{
+        transform:scale(1.18);
+        box-shadow:0 0 0 5px rgba(108, 43, 217, 0.18), 0 0 0 2px #6c2bd9;
+    }
+
+    .estacao-selecionada .estacao-nome{
+        color:#6c2bd9;
+        font-weight:800;
+    }
+
+    .legenda-mapa{
+        display:flex;
+        gap:24px;
+        flex-wrap:wrap;
+        align-items:center;
+        margin-top:18px;
+        font-size:0.95rem;
+        font-weight:500;
+    }
+
+    .legenda-cor{
+        display:inline-block;
+        width:14px;
+        height:14px;
+        border-radius:50%;
+        margin-right:6px;
+        vertical-align:middle;
+    }
+
+    .legenda-cor.toda-linha{ background:#6c2bd9; }
+    .legenda-cor.normal{ background:#0d6efd; }
+    .legenda-cor.selecionada{ background:#8b5cf6; }
+
+    @media (max-width: 1200px){
+        .grid-filtros{
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .acoes-filtro{
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 768px){
+        .grid-filtros{
+            grid-template-columns: 1fr;
+        }
+
+        .acoes-filtro{
+            grid-column: auto;
+            flex-wrap:wrap;
+        }
+    }
+</style>
 {% endblock %}

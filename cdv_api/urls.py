@@ -16,4 +16,6 @@ urlpatterns = [
     path('gerar_excel/', views.gerar_excel_estacao, name='gerar_excel_estacao'),
     path('dashboard/', views.dashboard_manutencao, name='dashboard_manutencao'),
     path("historico_circuito/", views.historico_circuito, name="historico_circuito"),
+    path('listar_rxs_circuito/', views.listar_rxs_circuito, name='listar_rxs_circuito'),
+    path("radar-saude/", views.radar_saude, name="radar_saude"),
 ]

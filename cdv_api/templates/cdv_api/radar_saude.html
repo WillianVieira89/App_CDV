@@ -1,0 +1,195 @@
+{% extends 'cdv_api/base.html' %}
+
+{% block title %}Radar de Saúde{% endblock %}
+
+{% block content %}
+
+<div class="pagina-cdv">
+
+  <div class="header-cdv">
+    <div>
+      <h1>Radar de Saúde</h1>
+      <p>Classificação baseada em relação, temperatura e tendência</p>
+    </div>
+  </div>
+
+  <div class="card-formulario">
+
+    <div class="titulo-tabela-linha">
+      <h2 class="titulo-bloco sem-margem">Ranking dos Circuitos</h2>
+      <span class="contador-badge">Total: {{ radar_saude|length }}</span>
+    </div>
+
+    <div class="tabela-container">
+      <table class="tabela-cadastro">
+        <thead>
+          <tr>
+            <th>Estação</th>
+            <th>Circuito</th>
+            <th>RX</th>
+            <th>Relação</th>
+            <th>Temp (°C)</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Diagnóstico</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in radar_saude %}
+          <tr>
+            <td>{{ item.estacao }}</td>
+            <td><strong>{{ item.circuito }}</strong></td>
+            <td>{{ item.rx }}</td>
+            <td>
+              {% if item.relacao is not None %}
+                {{ item.relacao }}%
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if item.temperatura is not None %}
+                {{ item.temperatura }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ item.score }}</td>
+
+            <td>
+              {% if item.cor == "verde" %}
+                <span class="badge bg-success">Saudável</span>
+              {% elif item.cor == "amarelo" %}
+                <span class="badge bg-warning text-dark">Atenção</span>
+              {% else %}
+                <span class="badge bg-danger">Crítico</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if item.tipo == "Falsa ocupação" %}
+                <span class="badge bg-danger">Falsa ocupação</span>
+              {% elif item.tipo == "Falsa desocupação" %}
+                <span class="badge bg-dark">Falsa desocupação</span>
+              {% elif item.tipo == "Sensível" %}
+                <span class="badge bg-warning text-dark">Sensível</span>
+              {% else %}
+                <span class="badge bg-success">Normal</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8">Nenhum dado disponível</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+  .pagina-cdv{
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 8px 10px 30px;
+  }
+
+  .header-cdv{
+    background: linear-gradient(90deg,#6c2bd9,#9f67ff);
+    color: #fff;
+    padding: 20px 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  }
+
+  .header-cdv h1{
+    margin: 0 0 6px 0;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  .header-cdv p{
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.95;
+  }
+
+  .card-formulario{
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    border: 1px solid rgba(108,43,217,0.12);
+    margin-bottom: 24px;
+  }
+
+  .titulo-tabela-linha{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .titulo-bloco{
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #6c2bd9;
+    margin: 0 0 18px 0;
+    border-left: 5px solid #6c2bd9;
+    padding-left: 12px;
+  }
+
+  .sem-margem{
+    margin-bottom: 0;
+  }
+
+  .contador-badge{
+    background: #f3e8ff;
+    color: #6c2bd9;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .tabela-container{
+    overflow-x: auto;
+  }
+
+  .tabela-cadastro{
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+
+  .tabela-cadastro th,
+  .tabela-cadastro td{
+    border: 1px solid #e5e7eb;
+    padding: 10px 12px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .tabela-cadastro th{
+    background: linear-gradient(90deg,#8b5cf6,#a855f7);
+    color: white;
+    font-weight: 800;
+  }
+
+  .tabela-cadastro tr:nth-child(even){
+    background: #f9fafb;
+  }
+
+  .tabela-cadastro tr:hover{
+    background: #eef2ff;
+  }
+</style>
+
+{% endblock %}

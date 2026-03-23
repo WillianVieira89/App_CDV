@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="manifest" href="{% static 'pwa/manifest.json' %}">
   <meta name="theme-color" content="#6c2bd9">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="{% static 'pwa/icons/icon-192.png' %}">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -71,10 +72,10 @@
 
     <script>
     if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-        navigator.serviceWorker.register("{% static 'pwa/sw.js' %}", { scope: "/" })
-            .then(reg => console.log("[PWA] SW registrado:", reg.scope))
-            .catch(err => console.error("[PWA] SW erro:", err));
+        window.addEventListener("load", function (){
+            navigator.serviceWorker.register("{% static "sw.js" %}")
+            .then(function (reg) { console.log("[PWA] SW registrado:", reg.scope) })
+            .catch(function (err) { console.log("[PWA] Falha ao registrar SW:", err) });
         });
     }
     </script>
