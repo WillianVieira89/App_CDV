@@ -46,3 +46,42 @@ class Receptor(models.Model):
 
     def __str__(self):
         return f"Receptor {self.num_receptor} (Circuito {self.num_circuito}) da Estação {self.estacao.nome}"
+
+
+from django.db import models
+
+class BaselineCDV(models.Model):
+    estacao = models.ForeignKey("Estacao", on_delete=models.CASCADE, related_name="baselines")
+    num_circuito = models.CharField(max_length=50)
+
+    # Referência TX
+    vout_ref = models.FloatField(null=True, blank=True, verbose_name="VOUT de referência")
+    pout_ref = models.FloatField(null=True, blank=True, verbose_name="POUT de referência")
+    tap_ref = models.IntegerField(null=True, blank=True, verbose_name="TAP de referência")
+    tipo_tx_ref = models.CharField(max_length=50, null=True, blank=True, verbose_name="Tipo TX de referência")
+
+    # Referência RX
+    iav_ref = models.FloatField(null=True, blank=True, verbose_name="IAV de referência")
+    ith_ref = models.FloatField(null=True, blank=True, verbose_name="ITH de referência")
+    relacao_ref = models.FloatField(null=True, blank=True, verbose_name="Relação de referência")
+
+    # Metadados do comissionamento
+    data_comissionamento = models.DateField(verbose_name="Data do comissionamento")
+    observacoes = models.TextField(blank=True, null=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Baseline CDV"
+        verbose_name_plural = "Baselines CDV"
+        ordering = ["estacao__nome", "num_circuito"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["estacao", "num_circuito"],
+                name="unique_baseline_por_estacao_circuito"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.estacao.nome} - {self.num_circuito}"
