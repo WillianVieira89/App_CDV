@@ -36,7 +36,7 @@
 
 <div class="container mt-4">
 
-    <h2 class="mb-4">
+    <h2 class="mb-4 titulo-relatorio">
         Gerar Relatório Excel
         {% if estacao_nome %}
             - {{ estacao_nome }}
@@ -44,7 +44,7 @@
     </h2>
 
     <!-- MAPA PRIMEIRO -->
-
+    <div class="mapa-estacoes-bloco">
         <div class="mapa-linha-wrapper">
             <div class="mapa-linha"></div>
 
@@ -53,14 +53,16 @@
                    class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
                    title="Visualizar toda a linha">
                     <span class="estacao-ponto"></span>
-                    <span class="estacao-nome">Toda Linha</span>
+                    <span class="estacao-nome desktop-label">Toda Linha</span>
+                    <span class="estacao-nome mobile-label">Linha</span>
                 </a>
 
                 {% for est in estacoes_mapa %}
                 <a href="{% url 'gerar_relatorio_excel_page' %}?estacao_id={{ est.id }}&circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
                    class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}">
                     <span class="estacao-ponto"></span>
-                    <span class="estacao-nome">{{ est.nome }}</span>
+                    <span class="estacao-nome desktop-label">{{ est.nome }}</span>
+                    <span class="estacao-nome mobile-label">{{ est.sigla }}</span>
                 </a>
                 {% endfor %}
             </div>
@@ -109,7 +111,7 @@
                 <button type="submit" class="btn-filtrar">
                     Gerar Excel
                 </button>
-                    <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn-limpar">Limpar</a>
+                <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn-limpar">Limpar</a>
             </div>
         </form>
     </div>
@@ -126,7 +128,6 @@ function fecharAlerta(botao) {
     setTimeout(() => alerta.remove(), 300);
 }
 
-// 🔥 AUTO FECHAR EM 4 SEGUNDOS
 document.addEventListener("DOMContentLoaded", function () {
     const alertas = document.querySelectorAll(".alert-custom");
 
@@ -140,6 +141,11 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
+    .titulo-relatorio{
+        font-weight:700;
+        color:#3b2a67;
+    }
+
     .painel-filtros{
         background:#ffffff;
         border-radius:16px;
@@ -185,6 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
         font-size:0.95rem;
         background:#fff;
         box-sizing:border-box;
+        min-height:44px;
     }
 
     .campo-filtro input:focus,
@@ -198,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
         display:flex;
         gap:10px;
         align-items:end;
+        flex-wrap:wrap;
     }
 
     .btn-filtrar{
@@ -209,6 +217,8 @@ document.addEventListener("DOMContentLoaded", function () {
         font-weight:700;
         cursor:pointer;
         transition:0.2s ease;
+        min-height:44px;
+        white-space:nowrap;
     }
 
     .btn-filtrar:hover{
@@ -232,6 +242,8 @@ document.addEventListener("DOMContentLoaded", function () {
         font-weight:600;
         background:#fff;
         transition:0.2s ease;
+        min-height:44px;
+        white-space:nowrap;
     }
 
     .btn-limpar:hover{
@@ -247,6 +259,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .mapa-estacoes-bloco{
         border-radius:16px;
         overflow:hidden;
+        margin-bottom:22px;
     }
 
     .secao-titulo{
@@ -262,17 +275,19 @@ document.addEventListener("DOMContentLoaded", function () {
         max-width:100%;
         padding:35px 10px 20px 10px;
         box-sizing:border-box;
+        overflow-x:auto;
+        overflow-y:hidden;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:thin;
     }
 
-    .mapa-linha{
-        position:absolute;
-        top:45px;
-        left:0;
-        width:100%;
-        height:5px;
-        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
+    .mapa-linha-wrapper::-webkit-scrollbar{
+        height:8px;
+    }
+
+    .mapa-linha-wrapper::-webkit-scrollbar-thumb{
+        background:rgba(108,43,217,0.25);
         border-radius:999px;
-        z-index:1;
     }
 
     .mapa-estacoes{
@@ -281,8 +296,21 @@ document.addEventListener("DOMContentLoaded", function () {
         justify-content:space-between;
         align-items:flex-start;
         width:100%;
-        gap:6px;
+        min-width:1100px;
+        gap:8px;
         z-index:2;
+    }
+
+    .mapa-linha{
+        position:absolute;
+        top:45px;
+        left:10px;
+        width:calc(100% - 20px);
+        min-width:1080px;
+        height:5px;
+        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
+        border-radius:999px;
+        z-index:1;
     }
 
     .estacao-no{
@@ -290,8 +318,8 @@ document.addEventListener("DOMContentLoaded", function () {
         flex-direction:column;
         align-items:center;
         text-decoration:none;
-        flex:1;
-        min-width:0;
+        flex:1 0 58px;
+        min-width:58px;
         color:#1f2937;
         transition:transform .2s ease;
     }
@@ -307,6 +335,7 @@ document.addEventListener("DOMContentLoaded", function () {
         border:4px solid white;
         box-shadow:0 0 0 3px rgba(0,0,0,0.08);
         margin-bottom:10px;
+        flex:0 0 auto;
     }
 
     .estacao-nome{
@@ -314,8 +343,13 @@ document.addEventListener("DOMContentLoaded", function () {
         text-align:center;
         line-height:1.1;
         font-weight:600;
-        max-width:70px;
+        max-width:78px;
         white-space:normal;
+        word-break:break-word;
+    }
+
+    .mobile-label{
+        display:none;
     }
 
     .estacao-normal .estacao-ponto{
@@ -370,13 +404,111 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     @media (max-width: 768px){
+        .titulo-relatorio{
+            font-size:1.35rem;
+            line-height:1.3;
+        }
+
+        .painel-filtros{
+            padding:18px 14px 18px 14px;
+            border-radius:14px;
+        }
+
         .grid-filtros{
             grid-template-columns: 1fr;
+            gap:14px;
         }
 
         .acoes-filtro{
-            grid-column: auto;
+            grid-column:auto;
             flex-wrap:wrap;
+            width:100%;
+        }
+
+        .btn-filtrar,
+        .btn-limpar{
+            width:100%;
+        }
+
+        .mapa-linha-wrapper{
+            padding:28px 8px 16px 8px;
+        }
+
+        .mapa-estacoes{
+            min-width:980px;
+            gap:10px;
+        }
+
+        .mapa-linha{
+            top:36px;
+            left:8px;
+            width:calc(100% - 16px);
+            min-width:964px;
+            height:4px;
+        }
+
+        .estacao-no{
+            min-width:52px;
+            flex:1 0 52px;
+        }
+
+        .estacao-ponto{
+            width:18px;
+            height:18px;
+            border:3px solid white;
+            box-shadow:0 0 0 2px rgba(0,0,0,0.08);
+            margin-bottom:8px;
+        }
+
+        .desktop-label{
+            display:none;
+        }
+
+        .mobile-label{
+            display:block;
+            font-size:0.68rem;
+            font-weight:700;
+            max-width:52px;
+        }
+
+        .legenda-mapa{
+            gap:14px;
+            font-size:0.85rem;
+        }
+    }
+
+    @media (max-width: 480px){
+        .container.mt-4{
+            padding-left:6px;
+            padding-right:6px;
+        }
+
+        .titulo-relatorio{
+            font-size:1.15rem;
+        }
+
+        .campo-filtro label{
+            font-size:0.82rem;
+        }
+
+        .campo-filtro input,
+        .campo-filtro select{
+            font-size:0.92rem;
+            padding:10px 10px;
+        }
+
+        .mapa-estacoes{
+            min-width:920px;
+        }
+
+        .mapa-linha{
+            min-width:904px;
+        }
+
+        .legenda-mapa{
+            flex-direction:column;
+            align-items:flex-start;
+            gap:8px;
         }
     }
 </style>

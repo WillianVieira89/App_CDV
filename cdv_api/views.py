@@ -240,6 +240,29 @@ def calcular_radar_saude(relacao, temperatura):
         "tipo": tipo
     }
     
+def obter_sigla_estacao(nome):
+    SIGLAS_ESTACOES = {
+        "Capão Redondo": "CPR",
+        "Campo Limpo": "CPL",
+        "Vila das Belezas": "VBE",
+        "Giovanni Gronchi": "GGR",
+        "Santo Amaro": "STA",
+        "Largo Treze": "LTR",
+        "Adolfo Pinheiro": "APN",
+        "Alto da Boa Vista": "ABV",
+        "Borba Gato": "BGA",
+        "Brooklin": "BRK",
+        "Campo Belo": "CPB",
+        "Eucaliptos": "ECT",
+        "Moema": "MOE",
+        "AACD Servidor": "SER",
+        "Hospital São Paulo": "HSP",
+        "Santa Cruz": "SCZ",
+        "Chácara Klabin": "CKB",
+    }
+
+    return SIGLAS_ESTACOES.get(nome, nome[:3].upper())
+    
 # =========================
 # PÁGINAS PRINCIPAIS
 # =========================
@@ -336,6 +359,7 @@ def gerar_relatorio_excel_page(request):
         estacoes_mapa.append({
             "id": est.id,
             "nome": est.nome,
+            "sigla": obter_sigla_estacao(est.nome),
             "status": "normal",
         })
 
@@ -1163,6 +1187,7 @@ def dashboard_manutencao(request):
         estacoes_mapa.append({
             "id": est.id,
             "nome": est.nome,
+            "sigla": obter_sigla_estacao(est.nome),
             "status": status,
             "qtd_criticos": qtd_criticos,
             "qtd_degradacoes": len(degradacoes_est),

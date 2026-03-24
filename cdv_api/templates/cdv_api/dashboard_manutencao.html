@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-4">
 
-    <h2 class="mb-4">
+    <h2 class="mb-4 titulo-dashboard">
         Dashboard de Manutenção CDV
         {% if estacao_nome %}
             - {{ estacao_nome }}
@@ -13,25 +13,29 @@
     </h2>
 
     <!-- MAPA -->
-    <div class="mapa-linha-wrapper">
-        <div class="mapa-linha"></div>
+    <div class="mapa-estacoes-bloco">
+        <div class="mapa-linha-wrapper">
+            <div class="mapa-linha"></div>
 
-        <div class="mapa-estacoes">
-            <a href="{% url 'dashboard_manutencao' %}"
-               class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
-               title="Visualizar toda a linha">
-                <span class="estacao-ponto"></span>
-                <span class="estacao-nome">Toda Linha</span>
-            </a>
+            <div class="mapa-estacoes">
+                <a href="{% url 'dashboard_manutencao' %}"
+                   class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
+                   title="Visualizar toda a linha">
+                    <span class="estacao-ponto"></span>
+                    <span class="estacao-nome desktop-label">Toda Linha</span>
+                    <span class="estacao-nome mobile-label">Linha</span>
+                </a>
 
-            {% for est in estacoes_mapa %}
-            <a href="{% url 'dashboard_manutencao' %}?estacao_id={{ est.id }}"
-               class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}"
-               title="Críticos: {{ est.qtd_criticos }} | Degradações: {{ est.qtd_degradacoes }}">
-                <span class="estacao-ponto"></span>
-                <span class="estacao-nome">{{ est.nome }}</span>
-            </a>
-            {% endfor %}
+                {% for est in estacoes_mapa %}
+                <a href="{% url 'dashboard_manutencao' %}?estacao_id={{ est.id }}"
+                   class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}"
+                   title="Críticos: {{ est.qtd_criticos }} | Degradações: {{ est.qtd_degradacoes }}">
+                    <span class="estacao-ponto"></span>
+                    <span class="estacao-nome desktop-label">{{ est.nome }}</span>
+                    <span class="estacao-nome mobile-label">{{ est.sigla }}</span>
+                </a>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
@@ -52,13 +56,13 @@
             {% endif %}
 
             <div class="campo-filtro">
-                <label>Circuito</label>
-                <input type="text" name="circuito_filtro" value="{{ circuito_filtro }}">
+                <label for="circuito_filtro">Circuito</label>
+                <input type="text" id="circuito_filtro" name="circuito_filtro" value="{{ circuito_filtro }}">
             </div>
 
             <div class="campo-filtro">
-                <label>Tipo de Manutenção</label>
-                <select name="tipo_manutencao">
+                <label for="tipo_manutencao">Tipo de Manutenção</label>
+                <select id="tipo_manutencao" name="tipo_manutencao">
                     <option value="">-- Todos --</option>
                     <option value="preventiva" {% if tipo_manutencao == "preventiva" %}selected{% endif %}>Preventiva</option>
                     <option value="corretiva" {% if tipo_manutencao == "corretiva" %}selected{% endif %}>Corretiva</option>
@@ -67,13 +71,13 @@
             </div>
 
             <div class="campo-filtro">
-                <label>Data Início</label>
-                <input type="date" name="data_inicio" value="{{ data_inicio }}">
+                <label for="data_inicio">Data Início</label>
+                <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio }}">
             </div>
 
             <div class="campo-filtro">
-                <label>Data Fim</label>
-                <input type="date" name="data_fim" value="{{ data_fim }}">
+                <label for="data_fim">Data Fim</label>
+                <input type="date" id="data_fim" name="data_fim" value="{{ data_fim }}">
             </div>
 
             <div class="acoes-filtro">
@@ -84,9 +88,9 @@
     </div>
 
     <!-- GRÁFICOS TX / RX -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
+    <div class="row mb-4 g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 shadow-sm card-dashboard">
                 <h5>Transmissores por Circuito</h5>
                 <div class="chart-box">
                     <canvas id="graficoTX"></canvas>
@@ -94,8 +98,8 @@
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 shadow-sm card-dashboard">
                 <h5>Receptores por Circuito</h5>
                 <div class="chart-box">
                     <canvas id="graficoRX"></canvas>
@@ -105,9 +109,9 @@
     </div>
 
     <!-- PIZZA -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
+    <div class="row mb-4 g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 shadow-sm card-dashboard">
                 <h5>Tipos de Manutenção</h5>
                 <div class="chart-box">
                     <canvas id="graficoTipo"></canvas>
@@ -117,9 +121,9 @@
     </div>
 
     <!-- BARRAS POR VIA -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
+    <div class="row mb-4 g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 shadow-sm card-dashboard">
                 <h5>Relação dos RX — Via 01</h5>
                 <div class="chart-box chart-box-alto">
                     <canvas id="graficoRelacaoVia1"></canvas>
@@ -128,8 +132,8 @@
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 shadow-sm card-dashboard">
                 <h5>Relação dos RX — Via 02</h5>
                 <div class="chart-box chart-box-alto">
                     <canvas id="graficoRelacaoVia2"></canvas>
@@ -141,29 +145,29 @@
 
     {% if circuitos_em_degradacao %}
 
-<!-- TENDÊNCIA DE DEGRADAÇÃO -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card p-3 shadow-sm">
-            <h5>Tendência de Degradação dos Circuitos</h5>
+    <!-- TENDÊNCIA DE DEGRADAÇÃO -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card p-3 shadow-sm card-dashboard">
+                <h5>Tendência de Degradação dos Circuitos</h5>
 
-            <div class="mb-3" style="max-width: 320px;">
-                <label for="seletorCircuitoDegradacao" class="form-label">Selecionar circuito</label>
-                <select id="seletorCircuitoDegradacao" class="form-control">
-                    <option value="">Selecione um circuito</option>
-                </select>
+                <div class="mb-3 seletor-degradacao">
+                    <label for="seletorCircuitoDegradacao" class="form-label">Selecionar circuito</label>
+                    <select id="seletorCircuitoDegradacao" class="form-control">
+                        <option value="">Selecione um circuito</option>
+                    </select>
+                </div>
+
+                <div class="chart-box chart-box-alto">
+                    <canvas id="graficoDegradacao"></canvas>
+                </div>
+
+                <p class="dica-clique">
+                    Linha amarela tracejada = degradação negativa · linha vermelha contínua = degradação positiva
+                </p>
             </div>
-
-            <div class="chart-box chart-box-alto">
-                <canvas id="graficoDegradacao"></canvas>
-            </div>
-
-            <p class="dica-clique">
-                Linha amarela tracejada = degradação negativa · linha vermelha contínua = degradação positiva
-            </p>
         </div>
     </div>
-</div>
 
     <!-- TABELA DE DEGRADAÇÃO -->
     <div class="card p-4 shadow-sm mb-5 tabela-bloco">
@@ -628,6 +632,16 @@ inicializarGraficoDegradacao();
 </script>
 
 <style>
+    .titulo-dashboard{
+        font-weight:700;
+        color:#3b2a67;
+        line-height:1.3;
+    }
+
+    .card-dashboard{
+        border-radius:16px;
+    }
+
     .chart-box {
         position: relative;
         width: 100%;
@@ -711,20 +725,41 @@ inicializarGraficoDegradacao();
         background-color: #fde2e1 !important;
     }
 
+    /* mapa */
+    .mapa-estacoes-bloco{
+        border-radius:16px;
+        overflow:hidden;
+        margin-bottom:8px;
+    }
+
     .mapa-linha-wrapper {
         position: relative;
         width: 100%;
         max-width: 100%;
-        padding: 35px 30px 20px 30px;
+        padding: 35px 10px 20px 10px;
         box-sizing: border-box;
         margin-bottom: 10px;
+        overflow-x:auto;
+        overflow-y:hidden;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:thin;
+    }
+
+    .mapa-linha-wrapper::-webkit-scrollbar{
+        height:8px;
+    }
+
+    .mapa-linha-wrapper::-webkit-scrollbar-thumb{
+        background:rgba(108,43,217,0.25);
+        border-radius:999px;
     }
 
     .mapa-linha {
         position: absolute;
         top: 45px;
-        left: 0;
-        width: 100%;
+        left: 10px;
+        width: calc(100% - 20px);
+        min-width: 1080px;
         height: 5px;
         background: linear-gradient(90deg, #6c2bd9, #8b5cf6);
         border-radius: 999px;
@@ -737,7 +772,8 @@ inicializarGraficoDegradacao();
         justify-content: space-between;
         align-items: flex-start;
         width: 100%;
-        gap: 6px;
+        min-width: 1100px;
+        gap: 8px;
         z-index: 2;
     }
 
@@ -746,8 +782,8 @@ inicializarGraficoDegradacao();
         flex-direction: column;
         align-items: center;
         text-decoration: none;
-        flex: 1;
-        min-width: 0;
+        flex: 1 0 58px;
+        min-width: 58px;
         transition: transform 0.2s ease;
     }
 
@@ -756,22 +792,28 @@ inicializarGraficoDegradacao();
     }
 
     .estacao-ponto {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         border: 4px solid white;
         box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
         margin-bottom: 10px;
+        flex: 0 0 auto;
     }
 
     .estacao-nome {
-        font-size: 0.5rem;
         text-align: center;
         line-height: 1.1;
         font-weight: 600;
-        max-width: 70px;
-        white-space: normal;
         color: #374151;
+        max-width: 78px;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.75rem;
+    }
+
+    .mobile-label{
+        display:none;
     }
 
     .estacao-normal .estacao-ponto {
@@ -831,6 +873,7 @@ inicializarGraficoDegradacao();
     .legenda-cor.atencao { background: #ffc107; }
     .legenda-cor.critico { background: #dc3545; }
 
+    /* filtros */
     .painel-filtros{
         background:#ffffff;
         border-radius:16px;
@@ -876,6 +919,7 @@ inicializarGraficoDegradacao();
         font-size:0.95rem;
         background:#fff;
         box-sizing:border-box;
+        min-height:44px;
     }
 
     .campo-filtro input:focus,
@@ -889,6 +933,7 @@ inicializarGraficoDegradacao();
         display:flex;
         gap:10px;
         align-items:end;
+        flex-wrap:wrap;
     }
 
     .btn-filtrar{
@@ -900,6 +945,8 @@ inicializarGraficoDegradacao();
         font-weight:700;
         cursor:pointer;
         transition:0.2s ease;
+        min-height:44px;
+        white-space:nowrap;
     }
 
     .btn-filtrar:hover{
@@ -918,10 +965,16 @@ inicializarGraficoDegradacao();
         font-weight:600;
         background:#fff;
         transition:0.2s ease;
+        min-height:44px;
+        white-space:nowrap;
     }
 
     .btn-limpar:hover{
         background:#f9fafb;
+    }
+
+    .seletor-degradacao{
+        max-width:320px;
     }
 
     @media (max-width: 1200px){
@@ -935,13 +988,139 @@ inicializarGraficoDegradacao();
     }
 
     @media (max-width: 768px){
+        .titulo-dashboard{
+            font-size:1.35rem;
+        }
+
+        .chart-box {
+            height: 280px;
+        }
+
+        .chart-box-alto {
+            height: 340px;
+        }
+
+        .painel-filtros{
+            padding:18px 14px 18px 14px;
+            border-radius:14px;
+        }
+
         .grid-filtros{
             grid-template-columns: 1fr;
+            gap:14px;
         }
 
         .acoes-filtro{
             grid-column: auto;
             flex-wrap:wrap;
+            width:100%;
+        }
+
+        .btn-filtrar,
+        .btn-limpar{
+            width:100%;
+        }
+
+        .mapa-linha-wrapper{
+            padding:28px 8px 16px 8px;
+        }
+
+        .mapa-estacoes{
+            min-width:980px;
+            gap:10px;
+        }
+
+        .mapa-linha{
+            top:36px;
+            left:8px;
+            width:calc(100% - 16px);
+            min-width:964px;
+            height:4px;
+        }
+
+        .estacao-no{
+            min-width:52px;
+            flex:1 0 52px;
+        }
+
+        .estacao-ponto{
+            width:18px;
+            height:18px;
+            border:3px solid white;
+            box-shadow:0 0 0 2px rgba(0,0,0,0.08);
+            margin-bottom:8px;
+        }
+
+        .desktop-label{
+            display:none;
+        }
+
+        .mobile-label{
+            display:block;
+            font-size:0.68rem;
+            font-weight:700;
+            max-width:52px;
+        }
+
+        .legenda-mapa{
+            gap:14px;
+            font-size:0.85rem;
+        }
+
+        .tabela-dashboard{
+            font-size:0.88rem;
+        }
+
+        .tabela-dashboard thead th,
+        .tabela-dashboard tbody td{
+            padding:10px 10px;
+        }
+
+        .seletor-degradacao{
+            max-width:100%;
+        }
+    }
+
+    @media (max-width: 480px){
+        .titulo-dashboard{
+            font-size:1.15rem;
+            line-height:1.35;
+        }
+
+        .chart-box {
+            height: 250px;
+        }
+
+        .chart-box-alto {
+            height: 300px;
+        }
+
+        .campo-filtro label{
+            font-size:0.82rem;
+        }
+
+        .campo-filtro input,
+        .campo-filtro select{
+            font-size:0.92rem;
+            padding:10px 10px;
+        }
+
+        .mapa-estacoes{
+            min-width:920px;
+        }
+
+        .mapa-linha{
+            min-width:904px;
+        }
+
+        .legenda-mapa{
+            flex-direction:column;
+            align-items:flex-start;
+            gap:8px;
+        }
+
+        .dica-clique{
+            font-size:0.82rem;
         }
     }
 </style>
