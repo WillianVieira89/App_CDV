@@ -44,12 +44,13 @@
     </h2>
 
     <!-- MAPA PRIMEIRO -->
+<!-- MAPA PRIMEIRO -->
     <div class="mapa-estacoes-bloco">
         <div class="mapa-linha-wrapper">
             <div class="mapa-estacoes">
                 <a href="{% url 'gerar_relatorio_excel_page' %}?circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
-                   class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
-                   title="Visualizar toda a linha">
+                class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
+                title="Visualizar toda a linha">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">Toda Linha</span>
                     <span class="estacao-nome mobile-label">Linha</span>
@@ -57,7 +58,7 @@
 
                 {% for est in estacoes_mapa %}
                 <a href="{% url 'gerar_relatorio_excel_page' %}?estacao_id={{ est.id }}&circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
-                   class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}">
+                class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">{{ est.nome }}</span>
                     <span class="estacao-nome mobile-label">{{ est.sigla }}</span>
@@ -65,12 +66,12 @@
                 {% endfor %}
             </div>
         </div>
+    </div>
 
-        <div class="legenda-mapa mt-3">
-            <span><span class="legenda-cor toda-linha"></span> Toda Linha</span>
-            <span><span class="legenda-cor normal"></span> Estação</span>
-            <span><span class="legenda-cor selecionada"></span> Selecionada</span>
-        </div>
+    <div class="legenda-mapa mt-3">
+        <span><span class="legenda-cor toda-linha"></span> Toda Linha</span>
+        <span><span class="legenda-cor normal"></span> Estação</span>
+        <span><span class="legenda-cor selecionada"></span> Selecionada</span>
     </div>
 
     <!-- FILTROS ABAIXO -->
@@ -231,30 +232,6 @@ document.addEventListener("DOMContentLoaded", function () {
     .relacao-alta {
         background-color: #fde2e1 !important;
     }
-
-    .legenda-mapa {
-        display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 18px;
-        font-size: 0.95rem;
-        font-weight: 500;
-    }
-
-    .legenda-cor {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        margin-right: 6px;
-        vertical-align: middle;
-    }
-
-    .legenda-cor.toda-linha { background: #6c2bd9; }
-    .legenda-cor.normal { background: #0d6efd; }
-    .legenda-cor.atencao { background: #ffc107; }
-    .legenda-cor.critico { background: #dc3545; }
 
     /* filtros */
     .painel-filtros{

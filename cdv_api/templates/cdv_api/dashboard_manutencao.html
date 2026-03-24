@@ -17,8 +17,8 @@
         <div class="mapa-linha-wrapper">
             <div class="mapa-estacoes">
                 <a href="{% url 'dashboard_manutencao' %}"
-                   class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
-                   title="Visualizar toda a linha">
+                class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
+                title="Visualizar toda a linha">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">Toda Linha</span>
                     <span class="estacao-nome mobile-label">Linha</span>
@@ -26,8 +26,8 @@
 
                 {% for est in estacoes_mapa %}
                 <a href="{% url 'dashboard_manutencao' %}?estacao_id={{ est.id }}"
-                   class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}"
-                   title="Críticos: {{ est.qtd_criticos }} | Degradações: {{ est.qtd_degradacoes }}">
+                class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}"
+                title="Críticos: {{ est.qtd_criticos }} | Degradações: {{ est.qtd_degradacoes }}">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">{{ est.nome }}</span>
                     <span class="estacao-nome mobile-label">{{ est.sigla }}</span>
@@ -723,158 +723,7 @@ inicializarGraficoDegradacao();
         background-color: #fde2e1 !important;
     }
 
-    /* mapa */
-    .mapa-estacoes-bloco{
-        border-radius:16px;
-        overflow:hidden;
-        margin-bottom:8px;
-    }
-
-    .mapa-linha-wrapper{
-        position:relative;
-        width:100%;
-        overflow-x:auto;
-        overflow-y:hidden;
-        padding:28px 8px 18px 8px;
-        box-sizing:border-box;
-        margin-bottom:10px;
-        -webkit-overflow-scrolling:touch;
-        scrollbar-width:thin;
-    }
-
-    .mapa-linha-wrapper::-webkit-scrollbar{
-        height:8px;
-    }
-
-    .mapa-linha-wrapper::-webkit-scrollbar-thumb{
-        background:rgba(108,43,217,0.25);
-        border-radius:999px;
-    }
-
-    .mapa-linha{
-        position:absolute;
-        top:37px;
-        left:16px;
-        width:1120px;
-        height:4px;
-        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
-        border-radius:999px;
-        z-index:1;
-    }
-
-    .mapa-estacoes{
-        position:relative;
-        display:flex;
-        align-items:flex-start;
-        gap:14px;
-        width:max-content;
-        min-width:1120px;
-        padding:0 8px;
-        z-index:2;
-    }
-
-    .estacao-no{
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:flex-start;
-        text-decoration:none;
-        flex:0 0 52px;
-        min-width:52px;
-        transition:transform 0.2s ease;
-    }
-
-    .estacao-no:hover{
-        transform:translateY(-4px);
-    }
-
-    .estacao-ponto{
-        width:18px;
-        height:18px;
-        border-radius:50%;
-        border:3px solid white;
-        box-shadow:0 0 0 2px rgba(0,0,0,0.08);
-        margin-bottom:8px;
-        flex:0 0 auto;
-    }
-
-    .estacao-nome{
-        text-align:center;
-        line-height:1.1;
-        font-weight:600;
-        color:#374151;
-        max-width:52px;
-        white-space:normal;
-        word-break:break-word;
-        font-size:0.68rem;
-    }
-
-    .mobile-label{
-        display:block;
-    }
-
-    .desktop-label{
-        display:none;
-    }
-
-    .estacao-normal .estacao-ponto {
-        background: #0d6efd;
-    }
-
-    .estacao-atencao .estacao-ponto {
-        background: #ffc107;
-    }
-
-    .estacao-critico .estacao-ponto {
-        background: #dc3545;
-        animation: pulsar 1.6s infinite;
-    }
-
-    .mapa-todas .estacao-ponto {
-        background: #6c2bd9;
-    }
-
-    .estacao-selecionada .estacao-ponto {
-        transform: scale(1.18);
-        box-shadow: 0 0 0 5px rgba(108, 43, 217, 0.20), 0 0 0 2px #6c2bd9;
-    }
-
-    .estacao-selecionada .estacao-nome {
-        color: #6c2bd9;
-        font-weight: 800;
-    }
-
-    @keyframes pulsar {
-        0% { box-shadow: 0 0 0 0 rgba(220,53,69,.7); }
-        70% { box-shadow: 0 0 0 10px rgba(220,53,69,0); }
-        100% { box-shadow: 0 0 0 0 rgba(220,53,69,0); }
-    }
-
-    .legenda-mapa {
-        display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 18px;
-        font-size: 0.95rem;
-        font-weight: 500;
-    }
-
-    .legenda-cor {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        margin-right: 6px;
-        vertical-align: middle;
-    }
-
-    .legenda-cor.toda-linha { background: #6c2bd9; }
-    .legenda-cor.normal { background: #0d6efd; }
-    .legenda-cor.atencao { background: #ffc107; }
-    .legenda-cor.critico { background: #dc3545; }
-
-    /* filtros */
+   /* filtros */
     .painel-filtros{
         background:#ffffff;
         border-radius:16px;
