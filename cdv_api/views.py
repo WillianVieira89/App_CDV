@@ -85,10 +85,10 @@ def ordenar_estacoes_linha(estacoes_qs):
         "Campo Belo",
         "Eucaliptos",
         "Moema",
-        "AACD Servidor",
-        "Hospital São Paulo",
+        "AACD-Servidor",
+        "Hospital São-Paulo",
         "Santa Cruz",
-        "Chácara Klabin",
+        "Chacara Klabin",
     ]
 
     ordem_idx = {nome: i for i, nome in enumerate(ordem_linha)}
@@ -263,45 +263,6 @@ def obter_sigla_estacao(nome):
 
     return SIGLAS_ESTACOES.get(nome, nome[:3].upper())
 
-ORDEM_ESTACOES = [
-    "capao redondo",
-    "campo limpo",
-    "vila das belezas",
-    "giovanni gronchi",
-    "santo amaro",
-    "largo treze",
-    "adolfo pinheiro",
-    "alto da boa vista",
-    "borba gato",
-    "brooklin",
-    "campo belo",
-    "eucaliptos",
-    "moema",
-    "aacd servidor",
-    "hospital sao paulo",
-    "santa cruz",
-    "chacara klabin",
-]
-
-def normalizar_nome_estacao(nome):
-    if not nome:
-        return ""
-
-    nome = nome.strip().lower().replace("-", " ")
-    nome = unicodedata.normalize("NFD", nome)
-    nome = "".join(c for c in nome if unicodedata.category(c) != "Mn")
-    nome = " ".join(nome.split())
-    return nome
-
-
-def ordenar_estacoes(estacoes):
-    ordem_index = {nome: i for i, nome in enumerate(ORDEM_ESTACOES)}
-
-    return sorted(
-        estacoes,
-        key=lambda e: ordem_index.get(normalizar_nome_estacao(e.nome), 999)
-    )
-    
 # =========================
 # PÁGINAS PRINCIPAIS
 # =========================
@@ -966,7 +927,7 @@ def dashboard_manutencao(request):
     data_fim = request.GET.get("data_fim")
     tipo_manutencao = request.GET.get("tipo_manutencao")
 
-    lista_de_estacoes = ordenar_estacoes(Estacao.objects.all())
+    lista_de_estacoes = ordenar_estacoes_linha(Estacao.objects.all())
 
     transmissores = Transmissor.objects.all()
     receptores = Receptor.objects.all()
