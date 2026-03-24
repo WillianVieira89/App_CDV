@@ -255,10 +255,10 @@ def obter_sigla_estacao(nome):
         "Campo Belo": "CPB",
         "Eucaliptos": "ECT",
         "Moema": "MOE",
-        "AACD Servidor": "SER",
-        "Hospital São Paulo": "HSP",
+        "AACD-Servidor": "SER",
+        "Hospital São-Paulo": "HSP",
         "Santa Cruz": "SCZ",
-        "Chácara Klabin": "CKB",
+        "Chacara Klabin": "CKB",
     }
 
     return SIGLAS_ESTACOES.get(nome, nome[:3].upper())
