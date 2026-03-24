@@ -4,11 +4,10 @@
 
 {% block content %}
 
-    {% if messages %}
-    <div class="alert-container">
+{% if messages %}
+<div class="alert-container">
     {% for message in messages %}
-        <div class="alert-custom {{ message.tags }}">
-        
+    <div class="alert-custom {{ message.tags }}">
         <div class="alert-icon">
             {% if message.tags == 'error' %}
             ⚠️
@@ -28,11 +27,10 @@
         <button class="alert-close" onclick="fecharAlerta(this)">
             ✖
         </button>
-
-        </div>
-    {% endfor %}
     </div>
-    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="container mt-4">
 
@@ -43,14 +41,13 @@
         {% endif %}
     </h2>
 
-    <!-- MAPA PRIMEIRO -->
-<!-- MAPA PRIMEIRO -->
+    <!-- MAPA -->
     <div class="mapa-estacoes-bloco">
         <div class="mapa-linha-wrapper">
             <div class="mapa-estacoes">
                 <a href="{% url 'gerar_relatorio_excel_page' %}?circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
-                class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
-                title="Visualizar toda a linha">
+                   class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
+                   title="Visualizar toda a linha">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">Toda Linha</span>
                     <span class="estacao-nome mobile-label">Linha</span>
@@ -58,7 +55,7 @@
 
                 {% for est in estacoes_mapa %}
                 <a href="{% url 'gerar_relatorio_excel_page' %}?estacao_id={{ est.id }}&circuito_filtro={{ circuito_filtro|urlencode }}&tipo_manutencao={{ tipo_manutencao|urlencode }}&data_inicio={{ data_inicio|urlencode }}&data_fim={{ data_fim|urlencode }}"
-                class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}">
+                   class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">{{ est.nome }}</span>
                     <span class="estacao-nome mobile-label">{{ est.sigla }}</span>
@@ -74,7 +71,7 @@
         <span><span class="legenda-cor selecionada"></span> Selecionada</span>
     </div>
 
-    <!-- FILTROS ABAIXO -->
+    <!-- FILTROS -->
     <div class="painel-filtros">
         <div class="faixa-linha5"></div>
 
@@ -107,9 +104,7 @@
             </div>
 
             <div class="acoes-filtro">
-                <button type="submit" class="btn-filtrar">
-                    Gerar Excel
-                </button>
+                <button type="submit" class="btn-filtrar">Gerar Excel</button>
                 <a href="{% url 'gerar_relatorio_excel_page' %}" class="btn-limpar">Limpar</a>
             </div>
         </form>
@@ -119,7 +114,6 @@
 {% endblock %}
 
 {% block extra_body %}
-
 <script>
 function fecharAlerta(botao) {
     const alerta = botao.parentElement;
@@ -140,100 +134,12 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
-    .titulo-dashboard{
+    .titulo-relatorio{
         font-weight:700;
         color:#3b2a67;
         line-height:1.3;
     }
 
-    .card-dashboard{
-        border-radius:16px;
-    }
-
-    .chart-box {
-        position: relative;
-        width: 100%;
-        height: 320px;
-        overflow: hidden;
-    }
-
-    .chart-box-alto {
-        height: 380px;
-    }
-
-    .chart-box canvas {
-        display: block;
-        width: 100% !important;
-        height: 100% !important;
-    }
-
-    .dica-clique {
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #6b7280;
-    }
-
-    .card-resumo h6 {
-        font-size: 0.85rem;
-        color: #6b7280;
-        margin-bottom: 8px;
-    }
-
-    .card-resumo h3 {
-        margin: 0;
-        font-weight: 800;
-    }
-
-    .tabela-bloco {
-        border-radius: 14px;
-    }
-
-    .secao-titulo {
-        margin-bottom: 20px;
-        font-weight: 700;
-        border-left: 5px solid #6c2bd9;
-        padding-left: 12px;
-    }
-
-    .tabela-dashboard {
-        table-layout: auto;
-        width: 100%;
-        font-size: 0.95rem;
-    }
-
-    .tabela-dashboard thead th {
-        text-align: center;
-        padding: 14px 12px;
-        white-space: nowrap;
-    }
-
-    .tabela-dashboard tbody td {
-        text-align: center;
-        padding: 12px 14px;
-        white-space: nowrap;
-    }
-
-    .tabela-dashboard tbody tr:hover {
-        filter: brightness(0.97);
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .relacao-baixa {
-        background-color: #fff3cd !important;
-    }
-
-    .relacao-normal {
-        background-color: #e7f1ff !important;
-    }
-
-    .relacao-alta {
-        background-color: #fde2e1 !important;
-    }
-
-    /* filtros */
     .painel-filtros{
         background:#ffffff;
         border-radius:16px;
@@ -333,10 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
         background:#f9fafb;
     }
 
-    .seletor-degradacao{
-        max-width:320px;
-    }
-
     @media (max-width: 1200px){
         .grid-filtros{
             grid-template-columns: 1fr 1fr;
@@ -348,16 +250,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     @media (max-width: 768px){
-        .titulo-dashboard{
+        .titulo-relatorio{
             font-size:1.35rem;
-        }
-
-        .chart-box {
-            height: 280px;
-        }
-
-        .chart-box-alto {
-            height: 340px;
         }
 
         .painel-filtros{
@@ -371,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         .acoes-filtro{
-            grid-column: auto;
+            grid-column:auto;
             flex-wrap:wrap;
             width:100%;
         }
@@ -385,33 +279,12 @@ document.addEventListener("DOMContentLoaded", function () {
             gap:14px;
             font-size:0.85rem;
         }
-
-        .tabela-dashboard{
-            font-size:0.88rem;
-        }
-
-        .tabela-dashboard thead th,
-        .tabela-dashboard tbody td{
-            padding:10px 10px;
-        }
-
-        .seletor-degradacao{
-            max-width:100%;
-        }
     }
 
     @media (max-width: 480px){
-        .titulo-dashboard{
+        .titulo-relatorio{
             font-size:1.15rem;
             line-height:1.35;
-        }
-
-        .chart-box {
-            height: 250px;
-        }
-
-        .chart-box-alto {
-            height: 300px;
         }
 
         .campo-filtro label{
@@ -429,11 +302,6 @@ document.addEventListener("DOMContentLoaded", function () {
             align-items:flex-start;
             gap:8px;
         }
-
-        .dica-clique{
-            font-size:0.82rem;
-        }
     }
 </style>
-
 {% endblock %}

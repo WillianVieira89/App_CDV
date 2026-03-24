@@ -17,8 +17,8 @@
         <div class="mapa-linha-wrapper">
             <div class="mapa-estacoes">
                 <a href="{% url 'dashboard_manutencao' %}"
-                class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
-                title="Visualizar toda a linha">
+                   class="estacao-no mapa-todas {% if not selected_estacao_id %}estacao-selecionada{% endif %}"
+                   title="Visualizar toda a linha">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">Toda Linha</span>
                     <span class="estacao-nome mobile-label">Linha</span>
@@ -26,8 +26,8 @@
 
                 {% for est in estacoes_mapa %}
                 <a href="{% url 'dashboard_manutencao' %}?estacao_id={{ est.id }}"
-                class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}"
-                title="Críticos: {{ est.qtd_criticos }} | Degradações: {{ est.qtd_degradacoes }}">
+                   class="estacao-no estacao-{{ est.status }} {% if selected_estacao_id == est.id|stringformat:'s' %}estacao-selecionada{% endif %}"
+                   title="Críticos: {{ est.qtd_criticos }} | Degradações: {{ est.qtd_degradacoes }}">
                     <span class="estacao-ponto"></span>
                     <span class="estacao-nome desktop-label">{{ est.nome }}</span>
                     <span class="estacao-nome mobile-label">{{ est.sigla }}</span>
@@ -360,115 +360,115 @@
         });
     }
 
-let graficoDegradacao = null;
+    let graficoDegradacao = null;
 
-function inicializarGraficoDegradacao() {
-    const seletor = document.getElementById('seletorCircuitoDegradacao');
-    const canvas = document.getElementById('graficoDegradacao');
+    function inicializarGraficoDegradacao() {
+        const seletor = document.getElementById('seletorCircuitoDegradacao');
+        const canvas = document.getElementById('graficoDegradacao');
 
-    if (!seletor || !canvas) return;
+        if (!seletor || !canvas) return;
 
-    if (!Array.isArray(degradacaoDatasets) || degradacaoDatasets.length === 0) {
-        seletor.innerHTML = '<option value="">Nenhum circuito em degradação</option>';
-        return;
-    }
-
-    seletor.innerHTML = '<option value="">Selecione um circuito</option>';
-
-    degradacaoDatasets.forEach((item, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = item.label;
-        seletor.appendChild(option);
-    });
-
-    function desenhar(index) {
-        if (index === '' || degradacaoDatasets[index] === undefined) {
-            if (graficoDegradacao) {
-                graficoDegradacao.destroy();
-                graficoDegradacao = null;
-            }
+        if (!Array.isArray(degradacaoDatasets) || degradacaoDatasets.length === 0) {
+            seletor.innerHTML = '<option value="">Nenhum circuito em degradação</option>';
             return;
         }
 
-        const dataset = degradacaoDatasets[index];
+        seletor.innerHTML = '<option value="">Selecione um circuito</option>';
 
-        if (graficoDegradacao) {
-            graficoDegradacao.destroy();
-        }
+        degradacaoDatasets.forEach((item, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = item.label;
+            seletor.appendChild(option);
+        });
 
-        graficoDegradacao = new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: dataset.labels || [],
-                datasets: [{
-                    label: dataset.label,
-                    data: dataset.values || [],
-                    borderColor: dataset.borderColor || 'rgba(220, 53, 69, 1)',
-                    backgroundColor: dataset.backgroundColor || 'rgba(220, 53, 69, 0.15)',
-                    borderDash: dataset.borderDash || [],
-                    pointRadius: dataset.pointRadius ?? 3,
-                    pointHoverRadius: dataset.pointHoverRadius ?? 5,
-                    tension: dataset.tension ?? 0.35,
-                    fill: false,
-                    spanGaps: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
+        function desenhar(index) {
+            if (index === '' || degradacaoDatasets[index] === undefined) {
+                if (graficoDegradacao) {
+                    graficoDegradacao.destroy();
+                    graficoDegradacao = null;
+                }
+                return;
+            }
+
+            const dataset = degradacaoDatasets[index];
+
+            if (graficoDegradacao) {
+                graficoDegradacao.destroy();
+            }
+
+            graficoDegradacao = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: dataset.labels || [],
+                    datasets: [{
+                        label: dataset.label,
+                        data: dataset.values || [],
+                        borderColor: dataset.borderColor || 'rgba(220, 53, 69, 1)',
+                        backgroundColor: dataset.backgroundColor || 'rgba(220, 53, 69, 0.15)',
+                        borderDash: dataset.borderDash || [],
+                        pointRadius: dataset.pointRadius ?? 3,
+                        pointHoverRadius: dataset.pointHoverRadius ?? 5,
+                        tension: dataset.tension ?? 0.35,
+                        fill: false,
+                        spanGaps: true
+                    }]
                 },
-                plugins: {
-                    legend: {
-                        display: true
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     },
-                    tooltip: {
-                        callbacks: {
-                            title: function(context) {
-                                return context[0]?.label || '';
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0]?.label || '';
+                                },
+                                label: function(context) {
+                                    return `Relação: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Data / Hora'
                             },
-                            label: function(context) {
-                                return `Relação: ${context.raw}%`;
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            min: 40,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Relação (%)'
                             }
                         }
                     }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Data / Hora'
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    },
-                    y: {
-                        min: 40,
-                        max: 100,
-                        title: {
-                            display: true,
-                            text: 'Relação (%)'
-                        }
-                    }
                 }
-            }
+            });
+        }
+
+        seletor.addEventListener('change', function() {
+            desenhar(this.value);
         });
+
+        seletor.value = '0';
+        desenhar('0');
     }
 
-    seletor.addEventListener('change', function() {
-        desenhar(this.value);
-    });
-
-    seletor.value = '0';
-    desenhar('0');
-}
-
-inicializarGraficoDegradacao();
+    inicializarGraficoDegradacao();
 
     let graficoHistorico = null;
 
@@ -723,7 +723,6 @@ inicializarGraficoDegradacao();
         background-color: #fde2e1 !important;
     }
 
-   /* filtros */
     .painel-filtros{
         background:#ffffff;
         border-radius:16px;
@@ -827,51 +826,6 @@ inicializarGraficoDegradacao();
         max-width:320px;
     }
 
-    @media (min-width: 769px){
-        .mapa-linha-wrapper{
-            padding:34px 10px 20px 10px;
-        }
-
-        .mapa-linha{
-            top:45px;
-            left:20px;
-            width:1260px;
-            height:5px;
-        }
-
-        .mapa-estacoes{
-            gap:18px;
-            min-width:1260px;
-            padding:0 10px;
-        }
-
-        .estacao-no{
-            flex:0 0 62px;
-            min-width:62px;
-        }
-
-        .estacao-ponto{
-            width:22px;
-            height:22px;
-            border:4px solid white;
-            box-shadow:0 0 0 3px rgba(0,0,0,0.08);
-            margin-bottom:10px;
-        }
-
-        .estacao-nome{
-            max-width:78px;
-            font-size:0.75rem;
-        }
-
-        .desktop-label{
-            display:block;
-        }
-
-        .mobile-label{
-            display:none;
-        }
-    }
-
     @media (max-width: 1200px){
         .grid-filtros{
             grid-template-columns: 1fr 1fr;
@@ -907,8 +861,8 @@ inicializarGraficoDegradacao();
 
         .acoes-filtro{
             grid-column: auto;
-            flex-wrap: wrap;
-            width: 100%;
+            flex-wrap:wrap;
+            width:100%;
         }
 
         .btn-filtrar,
