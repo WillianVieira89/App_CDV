@@ -44,7 +44,7 @@
         <span><span class="legenda-cor critico"></span> Crítico</span>
     </div>
 
-    <!-- PAINEL DE FILTROS -->
+    <!-- FILTROS -->
     <div class="painel-filtros">
         <div class="faixa-linha5"></div>
 
@@ -142,8 +142,6 @@
     </div>
 
     {% if circuitos_em_degradacao %}
-
-    <!-- TENDÊNCIA DE DEGRADAÇÃO -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card p-3 shadow-sm card-dashboard">
@@ -167,7 +165,6 @@
         </div>
     </div>
 
-    <!-- TABELA DE DEGRADAÇÃO -->
     <div class="card p-4 shadow-sm mb-5 tabela-bloco">
         <h4 class="secao-titulo">Identificação Automática de Degradação</h4>
 
@@ -208,14 +205,11 @@
             </table>
         </div>
     </div>
-
     {% else %}
-
     <div class="card p-4 shadow-sm mb-5 tabela-bloco">
         <h4 class="secao-titulo">Identificação Automática de Degradação</h4>
         <p class="mb-0 text-muted">Nenhuma degradação detectada no período selecionado.</p>
     </div>
-
     {% endif %}
 
     <!-- HISTÓRICO -->
@@ -235,694 +229,833 @@
 {% block extra_body %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const degradacaoDatasets = {{ degradacao_datasets|default:"[]"|safe }};
-    const degradacaoLabels = {{ degradacao_labels|default:"[]"|safe }};
+const degradacaoDatasets = {{ degradacao_datasets|default:"[]"|safe }};
+const degradacaoLabels = {{ degradacao_labels|default:"[]"|safe }};
 
-    const txLabels = {{ tx_labels|default:"[]"|safe }};
-    const txData = {{ tx_data|default:"[]"|safe }};
+const txLabels = {{ tx_labels|default:"[]"|safe }};
+const txData = {{ tx_data|default:"[]"|safe }};
 
-    const rxLabels = {{ rx_labels|default:"[]"|safe }};
-    const rxData = {{ rx_data|default:"[]"|safe }};
+const rxLabels = {{ rx_labels|default:"[]"|safe }};
+const rxData = {{ rx_data|default:"[]"|safe }};
 
-    const tipoLabels = {{ tipo_labels|default:"[]"|safe }};
-    const tipoData = {{ tipo_data|default:"[]"|safe }};
+const tipoLabels = {{ tipo_labels|default:"[]"|safe }};
+const tipoData = {{ tipo_data|default:"[]"|safe }};
 
-    const relacaoLabelsV1 = {{ relacao_labels_v1|default:"[]"|safe }};
-    const relacaoDataV1 = {{ relacao_data_v1|default:"[]"|safe }};
-    const relacaoCoresV1 = {{ relacao_cores_v1|default:"[]"|safe }};
-    const relacaoCircuitosV1 = {{ relacao_circuitos_v1|default:"[]"|safe }};
-    const relacaoRxsV1 = {{ relacao_rxs_v1|default:"[]"|safe }};
+const relacaoLabelsV1 = {{ relacao_labels_v1|default:"[]"|safe }};
+const relacaoDataV1 = {{ relacao_data_v1|default:"[]"|safe }};
+const relacaoCoresV1 = {{ relacao_cores_v1|default:"[]"|safe }};
+const relacaoCircuitosV1 = {{ relacao_circuitos_v1|default:"[]"|safe }};
+const relacaoRxsV1 = {{ relacao_rxs_v1|default:"[]"|safe }};
 
-    const relacaoLabelsV2 = {{ relacao_labels_v2|default:"[]"|safe }};
-    const relacaoDataV2 = {{ relacao_data_v2|default:"[]"|safe }};
-    const relacaoCoresV2 = {{ relacao_cores_v2|default:"[]"|safe }};
-    const relacaoCircuitosV2 = {{ relacao_circuitos_v2|default:"[]"|safe }};
-    const relacaoRxsV2 = {{ relacao_rxs_v2|default:"[]"|safe }};
+const relacaoLabelsV2 = {{ relacao_labels_v2|default:"[]"|safe }};
+const relacaoDataV2 = {{ relacao_data_v2|default:"[]"|safe }};
+const relacaoCoresV2 = {{ relacao_cores_v2|default:"[]"|safe }};
+const relacaoCircuitosV2 = {{ relacao_circuitos_v2|default:"[]"|safe }};
+const relacaoRxsV2 = {{ relacao_rxs_v2|default:"[]"|safe }};
 
-    const canvasTX = document.getElementById('graficoTX');
-    if (canvasTX) {
-        new Chart(canvasTX, {
-            type: 'bar',
-            data: {
-                labels: txLabels,
-                datasets: [{
-                    label: 'Transmissores',
-                    data: txData
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    }
+const canvasTX = document.getElementById('graficoTX');
+if (canvasTX) {
+    new Chart(canvasTX, {
+        type: 'bar',
+        data: {
+            labels: txLabels,
+            datasets: [{
+                label: 'Transmissores',
+                data: txData
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
 
-    const canvasRX = document.getElementById('graficoRX');
-    if (canvasRX) {
-        new Chart(canvasRX, {
-            type: 'bar',
-            data: {
-                labels: rxLabels,
-                datasets: [{
-                    label: 'Receptores',
-                    data: rxData
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    }
+const canvasRX = document.getElementById('graficoRX');
+if (canvasRX) {
+    new Chart(canvasRX, {
+        type: 'bar',
+        data: {
+            labels: rxLabels,
+            datasets: [{
+                label: 'Receptores',
+                data: rxData
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
 
-    const canvasTipo = document.getElementById('graficoTipo');
-    if (canvasTipo) {
-        new Chart(canvasTipo, {
-            type: 'pie',
-            data: {
-                labels: tipoLabels,
-                datasets: [{
-                    label: 'Tipos de Manutenção',
-                    data: tipoData,
-                    backgroundColor: [
-                        'rgba(200, 2, 253, 0.85)',
-                        'rgba(2, 53, 69, 0.85)',
-                        'rgba(2, 190, 7, 0.85)'
-                    ],
-                    borderColor: [
-                        'rgba(200, 2, 253, 1)',
-                        'rgba(2, 53, 69, 1)',
-                        'rgba(2, 190, 7, 1)'
-                    ],
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const data = context.dataset.data || [];
-                                const total = data.reduce((acc, val) => acc + val, 0);
-                                const valor = context.raw || 0;
-                                const percentual = total ? ((valor / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${percentual}%`;
-                            }
+const canvasTipo = document.getElementById('graficoTipo');
+if (canvasTipo) {
+    new Chart(canvasTipo, {
+        type: 'pie',
+        data: {
+            labels: tipoLabels,
+            datasets: [{
+                label: 'Tipos de Manutenção',
+                data: tipoData,
+                backgroundColor: [
+                    'rgba(200, 2, 253, 0.85)',
+                    'rgba(2, 53, 69, 0.85)',
+                    'rgba(2, 190, 7, 0.85)'
+                ],
+                borderColor: [
+                    'rgba(200, 2, 253, 1)',
+                    'rgba(2, 53, 69, 1)',
+                    'rgba(2, 190, 7, 1)'
+                ],
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const data = context.dataset.data || [];
+                            const total = data.reduce((acc, val) => acc + val, 0);
+                            const valor = context.raw || 0;
+                            const percentual = total ? ((valor / total) * 100).toFixed(1) : 0;
+                            return `${context.label}: ${percentual}%`;
                         }
-                    },
-                    legend: {
-                        labels: {
-                            generateLabels: function(chart) {
-                                const data = chart.data;
-                                const dataset = data.datasets[0];
-                                const total = (dataset.data || []).reduce((acc, val) => acc + val, 0);
+                    }
+                },
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            const dataset = data.datasets[0];
+                            const total = (dataset.data || []).reduce((acc, val) => acc + val, 0);
 
-                                return data.labels.map((label, i) => {
-                                    const valor = dataset.data[i] || 0;
-                                    const percentual = total ? ((valor / total) * 100).toFixed(1) : 0;
+                            return data.labels.map((label, i) => {
+                                const valor = dataset.data[i] || 0;
+                                const percentual = total ? ((valor / total) * 100).toFixed(1) : 0;
 
-                                    return {
-                                        text: `${label} (${percentual}%)`,
-                                        fillStyle: dataset.backgroundColor ? dataset.backgroundColor[i] : undefined,
-                                        strokeStyle: dataset.borderColor ? dataset.borderColor[i] : undefined,
-                                        lineWidth: 1,
-                                        hidden: isNaN(dataset.data[i]) || chart.getDataVisibility(i) === false,
-                                        index: i
-                                    };
-                                });
-                            }
+                                return {
+                                    text: `${label} (${percentual}%)`,
+                                    fillStyle: dataset.backgroundColor ? dataset.backgroundColor[i] : undefined,
+                                    strokeStyle: dataset.borderColor ? dataset.borderColor[i] : undefined,
+                                    lineWidth: 1,
+                                    hidden: isNaN(dataset.data[i]) || chart.getDataVisibility(i) === false,
+                                    index: i
+                                };
+                            });
                         }
                     }
                 }
             }
-        });
+        }
+    });
+}
+
+let graficoDegradacao = null;
+
+function inicializarGraficoDegradacao() {
+    const seletor = document.getElementById('seletorCircuitoDegradacao');
+    const canvas = document.getElementById('graficoDegradacao');
+
+    if (!seletor || !canvas) return;
+
+    if (!Array.isArray(degradacaoDatasets) || degradacaoDatasets.length === 0) {
+        seletor.innerHTML = '<option value="">Nenhum circuito em degradação</option>';
+        return;
     }
 
-    let graficoDegradacao = null;
+    seletor.innerHTML = '<option value="">Selecione um circuito</option>';
 
-    function inicializarGraficoDegradacao() {
-        const seletor = document.getElementById('seletorCircuitoDegradacao');
-        const canvas = document.getElementById('graficoDegradacao');
+    degradacaoDatasets.forEach((item, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = item.label;
+        seletor.appendChild(option);
+    });
 
-        if (!seletor || !canvas) return;
-
-        if (!Array.isArray(degradacaoDatasets) || degradacaoDatasets.length === 0) {
-            seletor.innerHTML = '<option value="">Nenhum circuito em degradação</option>';
+    function desenhar(index) {
+        if (index === '' || degradacaoDatasets[index] === undefined) {
+            if (graficoDegradacao) {
+                graficoDegradacao.destroy();
+                graficoDegradacao = null;
+            }
             return;
         }
 
-        seletor.innerHTML = '<option value="">Selecione um circuito</option>';
+        const dataset = degradacaoDatasets[index];
 
-        degradacaoDatasets.forEach((item, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = item.label;
-            seletor.appendChild(option);
-        });
-
-        function desenhar(index) {
-            if (index === '' || degradacaoDatasets[index] === undefined) {
-                if (graficoDegradacao) {
-                    graficoDegradacao.destroy();
-                    graficoDegradacao = null;
-                }
-                return;
-            }
-
-            const dataset = degradacaoDatasets[index];
-
-            if (graficoDegradacao) {
-                graficoDegradacao.destroy();
-            }
-
-            graficoDegradacao = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: dataset.labels || [],
-                    datasets: [{
-                        label: dataset.label,
-                        data: dataset.values || [],
-                        borderColor: dataset.borderColor || 'rgba(220, 53, 69, 1)',
-                        backgroundColor: dataset.backgroundColor || 'rgba(220, 53, 69, 0.15)',
-                        borderDash: dataset.borderDash || [],
-                        pointRadius: dataset.pointRadius ?? 3,
-                        pointHoverRadius: dataset.pointHoverRadius ?? 5,
-                        tension: dataset.tension ?? 0.35,
-                        fill: false,
-                        spanGaps: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    plugins: {
-                        legend: {
-                            display: true
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title: function(context) {
-                                    return context[0]?.label || '';
-                                },
-                                label: function(context) {
-                                    return `Relação: ${context.raw}%`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Data / Hora'
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        },
-                        y: {
-                            min: 40,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Relação (%)'
-                            }
-                        }
-                    }
-                }
-            });
+        if (graficoDegradacao) {
+            graficoDegradacao.destroy();
         }
 
-        seletor.addEventListener('change', function() {
-            desenhar(this.value);
-        });
-
-        seletor.value = '0';
-        desenhar('0');
-    }
-
-    inicializarGraficoDegradacao();
-
-    let graficoHistorico = null;
-
-    function desenharGraficoHistorico(circuito, rxSelecionado){
-        const estacaoId = "{{ selected_estacao_id|default:'' }}";
-
-        let url = `/historico_circuito/?circuito=${encodeURIComponent(circuito)}&rx=${encodeURIComponent(rxSelecionado)}`;
-        if (estacaoId) {
-            url += `&estacao_id=${encodeURIComponent(estacaoId)}`;
-        }
-
-        fetch(url)
-        .then(r => {
-            if (!r.ok) throw new Error('Falha ao carregar histórico');
-            return r.json();
-        })
-        .then(data => {
-            const ctx = document.getElementById('graficoHistorico');
-            if (!ctx) return;
-
-            if (graficoHistorico){
-                graficoHistorico.destroy();
-            }
-
-            graficoHistorico = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.datas,
-                    datasets: [
-                        {
-                            label: `Relação (%) - ${data.circuito} / RX ${data.rx}`,
-                            data: data.relacoes,
-                            borderColor: '#6c2bd9',
-                            backgroundColor: 'rgba(108,43,217,0.12)',
-                            yAxisID: 'yRelacao',
-                            fill: false,
-                            tension: 0.25,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: 'Temperatura (°C)',
-                            data: data.temperaturas,
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245,158,11,0.12)',
-                            yAxisID: 'yTemp',
-                            fill: false,
-                            tension: 0.25,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            spanGaps: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    scales: {
-                        yRelacao: {
-                            type: 'linear',
-                            position: 'left',
-                            min: 40,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Relação (%)'
-                            }
-                        },
-                        yTemp: {
-                            type: 'linear',
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Temperatura (°C)'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            ctx.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Não foi possível carregar o histórico do circuito.');
-        });
-    }
-
-    function criarGraficoRelacao(canvasId, labels, data, cores, circuitos, rxs){
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-
-        new Chart(canvas, {
-            type: 'bar',
+        graficoDegradacao = new Chart(canvas, {
+            type: 'line',
             data: {
-                labels: labels,
+                labels: dataset.labels || [],
                 datasets: [{
-                    label: 'Relação (%)',
-                    data: data,
-                    backgroundColor: cores
+                    label: dataset.label,
+                    data: dataset.values || [],
+                    borderColor: dataset.borderColor || 'rgba(220, 53, 69, 1)',
+                    backgroundColor: dataset.backgroundColor || 'rgba(220, 53, 69, 0.15)',
+                    borderDash: dataset.borderDash || [],
+                    pointRadius: dataset.pointRadius ?? 3,
+                    pointHoverRadius: dataset.pointHoverRadius ?? 5,
+                    tension: dataset.tension ?? 0.35,
+                    fill: false,
+                    spanGaps: true
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                onClick: (event, elements) => {
-                    if (!elements.length) return;
-                    const index = elements[0].index;
-                    const circuito = circuitos[index];
-                    const rx = rxs[index];
-                    desenharGraficoHistorico(circuito, rx);
+                interaction: {
+                    mode: 'index',
+                    intersect: false
                 },
                 plugins: {
+                    legend: {
+                        display: true
+                    },
                     tooltip: {
                         callbacks: {
+                            title: function(context) {
+                                return context[0]?.label || '';
+                            },
                             label: function(context) {
                                 return `Relação: ${context.raw}%`;
-                            },
-                            afterLabel: function() {
-                                return 'Clique em uma barra para abrir o histórico do RX.';
                             }
                         }
                     }
                 },
                 scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Data / Hora'
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
                     y: {
-                        beginAtZero: true,
-                        max: 100
+                        min: 40,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Relação (%)'
+                        }
                     }
                 }
             }
         });
     }
 
-    criarGraficoRelacao(
-        'graficoRelacaoVia1',
-        relacaoLabelsV1,
-        relacaoDataV1,
-        relacaoCoresV1,
-        relacaoCircuitosV1,
-        relacaoRxsV1
-    );
+    seletor.addEventListener('change', function() {
+        desenhar(this.value);
+    });
 
-    criarGraficoRelacao(
-        'graficoRelacaoVia2',
-        relacaoLabelsV2,
-        relacaoDataV2,
-        relacaoCoresV2,
-        relacaoCircuitosV2,
-        relacaoRxsV2
-    );
+    seletor.value = '0';
+    desenhar('0');
+}
+
+inicializarGraficoDegradacao();
+
+let graficoHistorico = null;
+
+function desenharGraficoHistorico(circuito, rxSelecionado){
+    const estacaoId = "{{ selected_estacao_id|default:'' }}";
+
+    let url = `/historico_circuito/?circuito=${encodeURIComponent(circuito)}&rx=${encodeURIComponent(rxSelecionado)}`;
+    if (estacaoId) {
+        url += `&estacao_id=${encodeURIComponent(estacaoId)}`;
+    }
+
+    fetch(url)
+    .then(r => {
+        if (!r.ok) throw new Error('Falha ao carregar histórico');
+        return r.json();
+    })
+    .then(data => {
+        const ctx = document.getElementById('graficoHistorico');
+        if (!ctx) return;
+
+        if (graficoHistorico){
+            graficoHistorico.destroy();
+        }
+
+        graficoHistorico = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.datas,
+                datasets: [
+                    {
+                        label: `Relação (%) - ${data.circuito} / RX ${data.rx}`,
+                        data: data.relacoes,
+                        borderColor: '#6c2bd9',
+                        backgroundColor: 'rgba(108,43,217,0.12)',
+                        yAxisID: 'yRelacao',
+                        fill: false,
+                        tension: 0.25,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Temperatura (°C)',
+                        data: data.temperaturas,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245,158,11,0.12)',
+                        yAxisID: 'yTemp',
+                        fill: false,
+                        tension: 0.25,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    yRelacao: {
+                        type: 'linear',
+                        position: 'left',
+                        min: 40,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Relação (%)'
+                        }
+                    },
+                    yTemp: {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Temperatura (°C)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        ctx.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Não foi possível carregar o histórico do circuito.');
+    });
+}
+
+function criarGraficoRelacao(canvasId, labels, data, cores, circuitos, rxs){
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Relação (%)',
+                data: data,
+                backgroundColor: cores
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (event, elements) => {
+                if (!elements.length) return;
+                const index = elements[0].index;
+                const circuito = circuitos[index];
+                const rx = rxs[index];
+                desenharGraficoHistorico(circuito, rx);
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Relação: ${context.raw}%`;
+                        },
+                        afterLabel: function() {
+                            return 'Clique em uma barra para abrir o histórico do RX.';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+criarGraficoRelacao(
+    'graficoRelacaoVia1',
+    relacaoLabelsV1,
+    relacaoDataV1,
+    relacaoCoresV1,
+    relacaoCircuitosV1,
+    relacaoRxsV1
+);
+
+criarGraficoRelacao(
+    'graficoRelacaoVia2',
+    relacaoLabelsV2,
+    relacaoDataV2,
+    relacaoCoresV2,
+    relacaoCircuitosV2,
+    relacaoRxsV2
+);
 </script>
 
 <style>
-    .titulo-dashboard{
-        font-weight:700;
-        color:#3b2a67;
-        line-height:1.3;
+/* MAPA FIXO NESTA PÁGINA */
+.mapa-estacoes-bloco {
+    border-radius: 16px !important;
+    overflow: visible !important;
+    margin-bottom: 8px !important;
+}
+
+.mapa-linha-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    padding: 28px 20px 18px 20px !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.mapa-estacoes {
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 18px !important;
+    width: max-content !important;
+    padding: 0 12px !important;
+    z-index: 2 !important;
+}
+
+.mapa-estacoes::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 9px !important;
+    left: 28px !important;
+    right: 28px !important;
+    height: 4px !important;
+    background: linear-gradient(90deg, #6c2bd9, #8b5cf6) !important;
+    border-radius: 999px !important;
+    z-index: 1 !important;
+}
+
+.estacao-no {
+    position: relative !important;
+    z-index: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 0 0 56px !important;
+    min-width: 56px !important;
+    text-decoration: none !important;
+}
+
+.estacao-ponto {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    border: 3px solid #fff !important;
+    margin-bottom: 8px !important;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.08) !important;
+}
+
+.estacao-nome {
+    display: block !important;
+    text-align: center !important;
+    line-height: 1.1 !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    max-width: 56px !important;
+    font-size: 0.70rem !important;
+    word-break: break-word !important;
+}
+
+.desktop-label { display: none !important; }
+.mobile-label { display: block !important; }
+
+.mapa-todas .estacao-ponto { background: #6c2bd9 !important; }
+.estacao-normal .estacao-ponto { background: #0d6efd !important; }
+.estacao-atencao .estacao-ponto { background: #ffc107 !important; }
+.estacao-critico .estacao-ponto { background: #dc3545 !important; }
+
+.estacao-selecionada .estacao-ponto {
+    transform: scale(1.2) !important;
+    box-shadow: 0 0 0 4px rgba(108,43,217,0.25), 0 0 0 2px #6c2bd9 !important;
+}
+
+.estacao-selecionada .estacao-nome {
+    color: #6c2bd9 !important;
+    font-weight: 800 !important;
+}
+
+.legenda-mapa {
+    display: flex !important;
+    gap: 24px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    margin-top: 12px !important;
+    margin-bottom: 18px !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+}
+
+.legenda-cor {
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+    margin-right: 6px !important;
+    vertical-align: middle !important;
+}
+
+.legenda-cor.toda-linha { background: #6c2bd9 !important; }
+.legenda-cor.normal { background: #0d6efd !important; }
+.legenda-cor.atencao { background: #ffc107 !important; }
+.legenda-cor.critico { background: #dc3545 !important; }
+
+/* RESTANTE DA PÁGINA */
+.titulo-dashboard{
+    font-weight:700;
+    color:#3b2a67;
+    line-height:1.3;
+}
+
+.card-dashboard{
+    border-radius:16px;
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+}
+
+.chart-box-alto {
+    height: 380px;
+}
+
+.chart-box canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.dica-clique {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.tabela-bloco {
+    border-radius: 14px;
+}
+
+.secao-titulo {
+    margin-bottom: 20px;
+    font-weight: 700;
+    border-left: 5px solid #6c2bd9;
+    padding-left: 12px;
+}
+
+.tabela-dashboard {
+    table-layout: auto;
+    width: 100%;
+    font-size: 0.95rem;
+}
+
+.tabela-dashboard thead th {
+    text-align: center;
+    padding: 14px 12px;
+    white-space: nowrap;
+}
+
+.tabela-dashboard tbody td {
+    text-align: center;
+    padding: 12px 14px;
+    white-space: nowrap;
+}
+
+.tabela-dashboard tbody tr:hover {
+    filter: brightness(0.97);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.relacao-baixa {
+    background-color: #fff3cd !important;
+}
+
+.relacao-normal {
+    background-color: #e7f1ff !important;
+}
+
+.relacao-alta {
+    background-color: #fde2e1 !important;
+}
+
+.painel-filtros{
+    background:#ffffff;
+    border-radius:16px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.08);
+    padding:22px 24px 20px 24px;
+    margin-bottom:30px;
+    position:relative;
+}
+
+.faixa-linha5{
+    height:6px;
+    width:100%;
+    background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
+    border-radius:999px;
+    margin-bottom:18px;
+}
+
+.grid-filtros{
+    display:grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+    gap:18px;
+    align-items:end;
+}
+
+.campo-filtro{
+    display:flex;
+    flex-direction:column;
+}
+
+.campo-filtro label{
+    font-size:0.85rem;
+    font-weight:700;
+    color:#4b5563;
+    margin-bottom:6px;
+}
+
+.campo-filtro input,
+.campo-filtro select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    font-size:0.95rem;
+    background:#fff;
+    box-sizing:border-box;
+    min-height:44px;
+}
+
+.campo-filtro input:focus,
+.campo-filtro select:focus{
+    outline:none;
+    border-color:#6c2bd9;
+    box-shadow:0 0 0 3px rgba(108,43,217,0.15);
+}
+
+.acoes-filtro{
+    display:flex;
+    gap:10px;
+    align-items:end;
+    flex-wrap:wrap;
+}
+
+.btn-filtrar{
+    background:#6c2bd9;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.2s ease;
+    min-height:44px;
+    white-space:nowrap;
+}
+
+.btn-filtrar:hover{
+    background:#5a21b6;
+}
+
+.btn-limpar{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 16px;
+    border-radius:8px;
+    border:1px solid #d1d5db;
+    color:#374151;
+    text-decoration:none;
+    font-weight:600;
+    background:#fff;
+    transition:0.2s ease;
+    min-height:44px;
+    white-space:nowrap;
+}
+
+.btn-limpar:hover{
+    background:#f9fafb;
+}
+
+.seletor-degradacao{
+    max-width:320px;
+}
+
+@media (min-width: 769px) {
+    .mapa-linha-wrapper {
+        padding: 34px 20px 20px 20px !important;
     }
 
-    .card-dashboard{
-        border-radius:16px;
+    .mapa-estacoes {
+        gap: 22px !important;
+        padding: 0 14px !important;
+    }
+
+    .mapa-estacoes::before {
+        top: 11px !important;
+        left: 36px !important;
+        right: 36px !important;
+        height: 5px !important;
+    }
+
+    .estacao-no {
+        flex: 0 0 68px !important;
+        min-width: 68px !important;
+    }
+
+    .estacao-ponto {
+        width: 22px !important;
+        height: 22px !important;
+        border: 4px solid #fff !important;
+        margin-bottom: 10px !important;
+    }
+
+    .estacao-nome {
+        max-width: 78px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .desktop-label { display: block !important; }
+    .mobile-label { display: none !important; }
+}
+
+@media (max-width: 1200px){
+    .grid-filtros{
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .acoes-filtro{
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px){
+    .titulo-dashboard{
+        font-size:1.35rem;
     }
 
     .chart-box {
-        position: relative;
-        width: 100%;
-        height: 320px;
-        overflow: hidden;
+        height: 280px;
     }
 
     .chart-box-alto {
-        height: 380px;
-    }
-
-    .chart-box canvas {
-        display: block;
-        width: 100% !important;
-        height: 100% !important;
-    }
-
-    .dica-clique {
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #6b7280;
-    }
-
-    .card-resumo h6 {
-        font-size: 0.85rem;
-        color: #6b7280;
-        margin-bottom: 8px;
-    }
-
-    .card-resumo h3 {
-        margin: 0;
-        font-weight: 800;
-    }
-
-    .tabela-bloco {
-        border-radius: 14px;
-    }
-
-    .secao-titulo {
-        margin-bottom: 20px;
-        font-weight: 700;
-        border-left: 5px solid #6c2bd9;
-        padding-left: 12px;
-    }
-
-    .tabela-dashboard {
-        table-layout: auto;
-        width: 100%;
-        font-size: 0.95rem;
-    }
-
-    .tabela-dashboard thead th {
-        text-align: center;
-        padding: 14px 12px;
-        white-space: nowrap;
-    }
-
-    .tabela-dashboard tbody td {
-        text-align: center;
-        padding: 12px 14px;
-        white-space: nowrap;
-    }
-
-    .tabela-dashboard tbody tr:hover {
-        filter: brightness(0.97);
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .relacao-baixa {
-        background-color: #fff3cd !important;
-    }
-
-    .relacao-normal {
-        background-color: #e7f1ff !important;
-    }
-
-    .relacao-alta {
-        background-color: #fde2e1 !important;
+        height: 340px;
     }
 
     .painel-filtros{
-        background:#ffffff;
-        border-radius:16px;
-        box-shadow:0 4px 14px rgba(0,0,0,0.08);
-        padding:22px 24px 20px 24px;
-        margin-bottom:30px;
-        position:relative;
-    }
-
-    .faixa-linha5{
-        height:6px;
-        width:100%;
-        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
-        border-radius:999px;
-        margin-bottom:18px;
+        padding:18px 14px 18px 14px;
+        border-radius:14px;
     }
 
     .grid-filtros{
-        display:grid;
-        grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
-        gap:18px;
-        align-items:end;
+        grid-template-columns: 1fr;
+        gap:14px;
     }
 
-    .campo-filtro{
-        display:flex;
-        flex-direction:column;
+    .acoes-filtro{
+        grid-column:auto;
+        flex-wrap:wrap;
+        width:100%;
+    }
+
+    .btn-filtrar,
+    .btn-limpar{
+        width:100%;
+    }
+
+    .legenda-mapa{
+        gap:14px !important;
+        font-size:0.85rem !important;
+    }
+
+    .tabela-dashboard{
+        font-size:0.88rem;
+    }
+
+    .tabela-dashboard thead th,
+    .tabela-dashboard tbody td{
+        padding:10px 10px;
+    }
+
+    .seletor-degradacao{
+        max-width:100%;
+    }
+}
+
+@media (max-width: 480px){
+    .titulo-dashboard{
+        font-size:1.15rem;
+        line-height:1.35;
+    }
+
+    .chart-box {
+        height: 250px;
+    }
+
+    .chart-box-alto {
+        height: 300px;
     }
 
     .campo-filtro label{
-        font-size:0.85rem;
-        font-weight:700;
-        color:#4b5563;
-        margin-bottom:6px;
+        font-size:0.82rem;
     }
 
     .campo-filtro input,
     .campo-filtro select{
-        width:100%;
-        padding:10px 12px;
-        border:1px solid #d1d5db;
-        border-radius:8px;
-        font-size:0.95rem;
-        background:#fff;
-        box-sizing:border-box;
-        min-height:44px;
+        font-size:0.92rem;
+        padding:10px 10px;
     }
 
-    .campo-filtro input:focus,
-    .campo-filtro select:focus{
-        outline:none;
-        border-color:#6c2bd9;
-        box-shadow:0 0 0 3px rgba(108,43,217,0.15);
+    .legenda-mapa{
+        flex-direction:column !important;
+        align-items:flex-start !important;
+        gap:8px !important;
     }
 
-    .acoes-filtro{
-        display:flex;
-        gap:10px;
-        align-items:end;
-        flex-wrap:wrap;
+    .dica-clique{
+        font-size:0.82rem;
     }
-
-    .btn-filtrar{
-        background:#6c2bd9;
-        color:#fff;
-        border:none;
-        border-radius:8px;
-        padding:10px 16px;
-        font-weight:700;
-        cursor:pointer;
-        transition:0.2s ease;
-        min-height:44px;
-        white-space:nowrap;
-    }
-
-    .btn-filtrar:hover{
-        background:#5a21b6;
-    }
-
-    .btn-limpar{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        padding:10px 16px;
-        border-radius:8px;
-        border:1px solid #d1d5db;
-        color:#374151;
-        text-decoration:none;
-        font-weight:600;
-        background:#fff;
-        transition:0.2s ease;
-        min-height:44px;
-        white-space:nowrap;
-    }
-
-    .btn-limpar:hover{
-        background:#f9fafb;
-    }
-
-    .seletor-degradacao{
-        max-width:320px;
-    }
-
-    @media (max-width: 1200px){
-        .grid-filtros{
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .acoes-filtro{
-            grid-column: 1 / -1;
-        }
-    }
-
-    @media (max-width: 768px){
-        .titulo-dashboard{
-            font-size:1.35rem;
-        }
-
-        .chart-box {
-            height: 280px;
-        }
-
-        .chart-box-alto {
-            height: 340px;
-        }
-
-        .painel-filtros{
-            padding:18px 14px 18px 14px;
-            border-radius:14px;
-        }
-
-        .grid-filtros{
-            grid-template-columns: 1fr;
-            gap:14px;
-        }
-
-        .acoes-filtro{
-            grid-column: auto;
-            flex-wrap:wrap;
-            width:100%;
-        }
-
-        .btn-filtrar,
-        .btn-limpar{
-            width:100%;
-        }
-
-        .legenda-mapa{
-            gap:14px;
-            font-size:0.85rem;
-        }
-
-        .tabela-dashboard{
-            font-size:0.88rem;
-        }
-
-        .tabela-dashboard thead th,
-        .tabela-dashboard tbody td{
-            padding:10px 10px;
-        }
-
-        .seletor-degradacao{
-            max-width:100%;
-        }
-    }
-
-    @media (max-width: 480px){
-        .titulo-dashboard{
-            font-size:1.15rem;
-            line-height:1.35;
-        }
-
-        .chart-box {
-            height: 250px;
-        }
-
-        .chart-box-alto {
-            height: 300px;
-        }
-
-        .campo-filtro label{
-            font-size:0.82rem;
-        }
-
-        .campo-filtro input,
-        .campo-filtro select{
-            font-size:0.92rem;
-            padding:10px 10px;
-        }
-
-        .legenda-mapa{
-            flex-direction:column;
-            align-items:flex-start;
-            gap:8px;
-        }
-
-        .dica-clique{
-            font-size:0.82rem;
-        }
-    }
+}
 </style>
-
 {% endblock %}

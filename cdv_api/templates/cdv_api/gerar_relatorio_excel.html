@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
-/* TESTE DEFINITIVO DO MAPA */
+/* MAPA FIXO NESTA PÁGINA */
 .mapa-estacoes-bloco {
     border-radius: 16px !important;
     overflow: visible !important;
@@ -190,7 +190,6 @@ document.addEventListener("DOMContentLoaded", function () {
     border: 3px solid #fff !important;
     margin-bottom: 8px !important;
     box-shadow: 0 0 0 2px rgba(0,0,0,0.08) !important;
-    flex: 0 0 auto !important;
 }
 
 .estacao-nome {
@@ -204,29 +203,13 @@ document.addEventListener("DOMContentLoaded", function () {
     word-break: break-word !important;
 }
 
-.desktop-label {
-    display: none !important;
-}
+.desktop-label { display: none !important; }
+.mobile-label { display: block !important; }
 
-.mobile-label {
-    display: block !important;
-}
-
-.mapa-todas .estacao-ponto {
-    background: #6c2bd9 !important;
-}
-
-.estacao-normal .estacao-ponto {
-    background: #0d6efd !important;
-}
-
-.estacao-atencao .estacao-ponto {
-    background: #ffc107 !important;
-}
-
-.estacao-critico .estacao-ponto {
-    background: #dc3545 !important;
-}
+.mapa-todas .estacao-ponto { background: #6c2bd9 !important; }
+.estacao-normal .estacao-ponto { background: #0d6efd !important; }
+.estacao-atencao .estacao-ponto { background: #ffc107 !important; }
+.estacao-critico .estacao-ponto { background: #dc3545 !important; }
 
 .estacao-selecionada .estacao-ponto {
     transform: scale(1.2) !important;
@@ -262,6 +245,112 @@ document.addEventListener("DOMContentLoaded", function () {
 .legenda-cor.normal { background: #0d6efd !important; }
 .legenda-cor.selecionada { background: #8b5cf6 !important; }
 
+/* RESTANTE DA PÁGINA */
+.titulo-relatorio{
+    font-weight:700;
+    color:#3b2a67;
+    line-height:1.3;
+}
+
+.painel-filtros{
+    background:#ffffff;
+    border-radius:16px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.08);
+    padding:22px 24px 20px 24px;
+    margin-bottom:30px;
+    position:relative;
+}
+
+.faixa-linha5{
+    height:6px;
+    width:100%;
+    background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
+    border-radius:999px;
+    margin-bottom:18px;
+}
+
+.grid-filtros{
+    display:grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+    gap:18px;
+    align-items:end;
+}
+
+.campo-filtro{
+    display:flex;
+    flex-direction:column;
+}
+
+.campo-filtro label{
+    font-size:0.85rem;
+    font-weight:700;
+    color:#4b5563;
+    margin-bottom:6px;
+}
+
+.campo-filtro input,
+.campo-filtro select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    font-size:0.95rem;
+    background:#fff;
+    box-sizing:border-box;
+    min-height:44px;
+}
+
+.campo-filtro input:focus,
+.campo-filtro select:focus{
+    outline:none;
+    border-color:#6c2bd9;
+    box-shadow:0 0 0 3px rgba(108,43,217,0.15);
+}
+
+.acoes-filtro{
+    display:flex;
+    gap:10px;
+    align-items:end;
+    flex-wrap:wrap;
+}
+
+.btn-filtrar{
+    background:#6c2bd9;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.2s ease;
+    min-height:44px;
+    white-space:nowrap;
+}
+
+.btn-filtrar:hover{
+    background:#5a21b6;
+}
+
+.btn-limpar{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 16px;
+    border-radius:8px;
+    border:1px solid #d1d5db;
+    color:#374151;
+    text-decoration:none;
+    font-weight:600;
+    background:#fff;
+    transition:0.2s ease;
+    min-height:44px;
+    white-space:nowrap;
+}
+
+.btn-limpar:hover{
+    background:#f9fafb;
+}
+
 @media (min-width: 769px) {
     .mapa-linha-wrapper {
         padding: 34px 20px 20px 20px !important;
@@ -296,185 +385,73 @@ document.addEventListener("DOMContentLoaded", function () {
         font-size: 0.75rem !important;
     }
 
-    .desktop-label {
-        display: block !important;
+    .desktop-label { display: block !important; }
+    .mobile-label { display: none !important; }
+}
+
+@media (max-width: 1200px){
+    .grid-filtros{
+        grid-template-columns: 1fr 1fr;
     }
 
-    .mobile-label {
-        display: none !important;
+    .acoes-filtro{
+        grid-column: 1 / -1;
     }
 }
-</style>
 
-<style>
+@media (max-width: 768px){
     .titulo-relatorio{
-        font-weight:700;
-        color:#3b2a67;
-        line-height:1.3;
+        font-size:1.35rem;
     }
 
     .painel-filtros{
-        background:#ffffff;
-        border-radius:16px;
-        box-shadow:0 4px 14px rgba(0,0,0,0.08);
-        padding:22px 24px 20px 24px;
-        margin-bottom:30px;
-        position:relative;
-    }
-
-    .faixa-linha5{
-        height:6px;
-        width:100%;
-        background:linear-gradient(90deg,#6c2bd9,#8b5cf6);
-        border-radius:999px;
-        margin-bottom:18px;
+        padding:18px 14px 18px 14px;
+        border-radius:14px;
     }
 
     .grid-filtros{
-        display:grid;
-        grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
-        gap:18px;
-        align-items:end;
+        grid-template-columns: 1fr;
+        gap:14px;
     }
 
-    .campo-filtro{
-        display:flex;
-        flex-direction:column;
+    .acoes-filtro{
+        grid-column:auto;
+        flex-wrap:wrap;
+        width:100%;
+    }
+
+    .btn-filtrar,
+    .btn-limpar{
+        width:100%;
+    }
+
+    .legenda-mapa{
+        gap:14px !important;
+        font-size:0.85rem !important;
+    }
+}
+
+@media (max-width: 480px){
+    .titulo-relatorio{
+        font-size:1.15rem;
+        line-height:1.35;
     }
 
     .campo-filtro label{
-        font-size:0.85rem;
-        font-weight:700;
-        color:#4b5563;
-        margin-bottom:6px;
+        font-size:0.82rem;
     }
 
     .campo-filtro input,
     .campo-filtro select{
-        width:100%;
-        padding:10px 12px;
-        border:1px solid #d1d5db;
-        border-radius:8px;
-        font-size:0.95rem;
-        background:#fff;
-        box-sizing:border-box;
-        min-height:44px;
+        font-size:0.92rem;
+        padding:10px 10px;
     }
 
-    .campo-filtro input:focus,
-    .campo-filtro select:focus{
-        outline:none;
-        border-color:#6c2bd9;
-        box-shadow:0 0 0 3px rgba(108,43,217,0.15);
+    .legenda-mapa{
+        flex-direction:column !important;
+        align-items:flex-start !important;
+        gap:8px !important;
     }
-
-    .acoes-filtro{
-        display:flex;
-        gap:10px;
-        align-items:end;
-        flex-wrap:wrap;
-    }
-
-    .btn-filtrar{
-        background:#6c2bd9;
-        color:#fff;
-        border:none;
-        border-radius:8px;
-        padding:10px 16px;
-        font-weight:700;
-        cursor:pointer;
-        transition:0.2s ease;
-        min-height:44px;
-        white-space:nowrap;
-    }
-
-    .btn-filtrar:hover{
-        background:#5a21b6;
-    }
-
-    .btn-limpar{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        padding:10px 16px;
-        border-radius:8px;
-        border:1px solid #d1d5db;
-        color:#374151;
-        text-decoration:none;
-        font-weight:600;
-        background:#fff;
-        transition:0.2s ease;
-        min-height:44px;
-        white-space:nowrap;
-    }
-
-    .btn-limpar:hover{
-        background:#f9fafb;
-    }
-
-    @media (max-width: 1200px){
-        .grid-filtros{
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .acoes-filtro{
-            grid-column: 1 / -1;
-        }
-    }
-
-    @media (max-width: 768px){
-        .titulo-relatorio{
-            font-size:1.35rem;
-        }
-
-        .painel-filtros{
-            padding:18px 14px 18px 14px;
-            border-radius:14px;
-        }
-
-        .grid-filtros{
-            grid-template-columns: 1fr;
-            gap:14px;
-        }
-
-        .acoes-filtro{
-            grid-column:auto;
-            flex-wrap:wrap;
-            width:100%;
-        }
-
-        .btn-filtrar,
-        .btn-limpar{
-            width:100%;
-        }
-
-        .legenda-mapa{
-            gap:14px;
-            font-size:0.85rem;
-        }
-    }
-
-    @media (max-width: 480px){
-        .titulo-relatorio{
-            font-size:1.15rem;
-            line-height:1.35;
-        }
-
-        .campo-filtro label{
-            font-size:0.82rem;
-        }
-
-        .campo-filtro input,
-        .campo-filtro select{
-            font-size:0.92rem;
-            padding:10px 10px;
-        }
-
-        .legenda-mapa{
-            flex-direction:column;
-            align-items:flex-start;
-            gap:8px;
-        }
-    }
+}
 </style>
 {% endblock %}
