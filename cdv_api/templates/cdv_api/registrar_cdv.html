@@ -634,9 +634,15 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarContadores();
 });
 
-async function buscarTemperaturaBackend(estacao) {
+async function buscarTemperaturaBackend(estacao, dataColeta, horaColeta) {
   try {
-    const resp = await fetch(`/buscar-temperatura-estacao/?estacao=${encodeURIComponent(estacao)}`);
+    const params = new URLSearchParams({
+      estacao: estacao || "",
+      data: dataColeta || "",
+      hora: horaColeta || ""
+    });
+
+    const resp = await fetch(`{% url 'buscar_temperatura_estacao' %}?${params.toString()}`);
     const data = await resp.json();
 
     if (!data.ok) {
@@ -747,7 +753,8 @@ async function adicionarTransmissor(){
 
   if (!validarObrigatorioHHMMOuFocar(horaEl,'TX')) return;
 
-  const temp = await buscarTemperaturaBackend(est);
+  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
+  const temp = await buscarTemperaturaBackend(est, dataStr, horaEl.value);
   const tempFinal = temp ?? "";
 
   appendRow('dados-transmissor', [
@@ -781,7 +788,8 @@ async function adicionarReceptor(){
 
   if (!validarObrigatorioHHMMOuFocar(horaEl,'RX')) return;
 
-  const temp = await buscarTemperaturaBackend(est);
+  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
+  const temp = await buscarTemperaturaBackend(est, dataStr, horaEl.value);
   const tempFinal = temp ?? "";
 
   appendRow('dados-receptor', [

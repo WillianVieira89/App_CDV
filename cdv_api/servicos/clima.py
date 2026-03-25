@@ -1,6 +1,7 @@
 import os
 import logging
 import unicodedata
+import datetime
 
 import requests
 from django.utils import timezone
@@ -173,7 +174,7 @@ def obter_ultima_temperatura_salva(estacao_nome):
     }
 
 
-def obter_temperatura_estacao(estacao_nome):
+def obter_temperatura_estacao(estacao_nome):    
     erros = []
 
     try:
@@ -197,3 +198,110 @@ def obter_temperatura_estacao(estacao_nome):
         return fallback
 
     raise Exception("Não foi possível obter a temperatura. " + " | ".join(erros))
+
+def obter_temperatura_open_meteo_horaria(estacao_nome, data_str, hora_str):
+    coords = obter_coordenadas(estacao_nome)
+    if not coords:
+        raise ValueError(f"Coordenadas não encontradas para a estação: {estacao_nome}")
+
+    try:
+        data_ref = datetime.datetime.strptime(data_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError("Data inválida. Use o formato YYYY-MM-DD.")
+
+    try:
+        hora_ref = datetime.datetime.strptime(hora_str[:5], "%H:%M").time()
+    except ValueError:
+        raise ValueError("Hora inválida. Use o formato HH:MM.")
+
+    hoje = timezone.localdate()
+    hora_alvo = f"{hora_ref.hour:02d}:00"
+
+    if data_ref == hoje:
+        url = "https://api.open-meteo.com/v1/forecast"
+        params = {
+            "latitude": coords["lat"],
+            "longitude": coords["lon"],
+            "hourly": "temperature_2m,relative_humidity_2m",
+            "timezone": "America/Sao_Paulo",
+            "forecast_days": 1,
+        }
+    else:
+        url = "https://archive-api.open-meteo.com/v1/archive"
+        params = {
+            "latitude": coords["lat"],
+            "longitude": coords["lon"],
+            "start_date": data_str,
+            "end_date": data_str,
+            "hourly": "temperature_2m,relative_humidity_2m",
+            "timezone": "America/Sao_Paulo",
+        }
+
+    resp = requests.get(url, params=params, timeout=TIMEOUT_API)
+    resp.raise_for_status()
+    data = resp.json()
+
+    hourly = data.get("hourly", {})
+    times = hourly.get("time", [])
+    temps = hourly.get("temperature_2m", [])
+    hums = hourly.get("relative_humidity_2m", [])
+
+    alvo = f"{data_str}T{hora_alvo}"
+
+    idx = times.index(alvo) if alvo in times else -1
+
+    if idx == -1:
+        # tenta hora anterior/posterior
+        h = hora_ref.hour
+        alternativas = []
+        if h > 0:
+            alternativas.append(f"{data_str}T{h-1:02d}:00")
+        if h < 23:
+            alternativas.append(f"{data_str}T{h+1:02d}:00")
+
+        for alt in alternativas:
+            if alt in times:
+                idx = times.index(alt)
+                break
+
+    if idx == -1:
+        raise ValueError("Open-Meteo não encontrou temperatura para o horário informado.")
+
+    temperatura = temps[idx] if idx < len(temps) else None
+    umidade = hums[idx] if idx < len(hums) else None
+
+    if temperatura is None:
+        raise ValueError("Open-Meteo não retornou temperatura horária.")
+
+    return {
+        "temperatura": float(temperatura),
+        "umidade": umidade,
+        "fonte": "open-meteo-horario",
+        "coletado_em": timezone.now(),
+    }
+
+
+def obter_temperatura_por_horario(estacao_nome, data_str, hora_str):
+    erros = []
+
+    try:
+        return obter_temperatura_open_meteo_horaria(estacao_nome, data_str, hora_str)
+    except Exception as e:
+        erros.append(f"Open-Meteo horário: {e}")
+
+    # fallback: temperatura atual
+    try:
+        resultado = obter_clima_weatherapi(estacao_nome)
+        resultado["tentativa"] = "fallback_api_atual"
+        resultado["erros"] = erros
+        return resultado
+    except Exception as e:
+        erros.append(f"WeatherAPI atual: {e}")
+
+    fallback = obter_ultima_temperatura_salva(estacao_nome)
+    if fallback:
+        fallback["tentativa"] = "fallback_banco"
+        fallback["erros"] = erros
+        return fallback
+
+    raise Exception("Não foi possível obter a temperatura por horário. " + " | ".join(erros))

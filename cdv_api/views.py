@@ -1295,16 +1295,24 @@ def dashboard_manutencao(request):
 @login_required
 def buscar_temperatura_estacao(request):
     estacao_nome = request.GET.get("estacao")
+    data_coleta = request.GET.get("data")
+    horario_coleta = request.GET.get("hora")
 
     if not estacao_nome:
         return JsonResponse({"ok": False, "erro": "Estação não informada."}, status=400)
 
     try:
-        clima = obter_temperatura_estacao(estacao_nome)
-        
+        if data_coleta and horario_coleta:
+            from cdv_api.servicos.clima import obter_temperatura_por_horario
+            clima = obter_temperatura_por_horario(estacao_nome, data_coleta, horario_coleta)
+        else:
+            clima = obter_temperatura_estacao(estacao_nome)
+
         logger.info(
-            "[CLIMA] Estação=%s Temp=%.2f Fonte=%s",
+            "[CLIMA] Estação=%s Data=%s Hora=%s Temp=%s Fonte=%s",
             estacao_nome,
+            data_coleta,
+            horario_coleta,
             clima["temperatura"],
             clima.get("fonte"),
         )
@@ -1314,10 +1322,7 @@ def buscar_temperatura_estacao(request):
             "temperatura": clima["temperatura"],
             "umidade": clima.get("umidade"),
             "fonte": clima.get("fonte"),
-            "coletado_em": str(clima.get("coletado_em")),
-            "fallback": clima.get("fonte") == "banco_local"
         })
-
     except Exception as e:
         return JsonResponse({
             "ok": False,
