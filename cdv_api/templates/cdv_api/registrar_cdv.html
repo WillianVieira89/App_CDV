@@ -838,7 +838,7 @@ function rowToTransmissor(tr){
     tipo_transmissor: cellText(t[5]),
     tipo_manutencao: normalizaTipoManutencao(cellText(t[6])),
     horario_coleta: cellText(t[7])||null,
-    temperatura_local: toFloatOrNull(cellText(t[8]))
+    temp_celsius: toFloatOrNull(cellText(t[8]))
   };
 }
 function rowToReceptor(tr){
@@ -853,7 +853,7 @@ function rowToReceptor(tr){
     relacao: Number.isFinite(relNum)?relNum:null,
     tipo_manutencao: normalizaTipoManutencao(cellText(t[5])),
     horario_coleta: cellText(t[6])||null,
-    temperatura_local: toFloatOrNull(cellText(t[7]))
+    temp_celsius: toFloatOrNull(cellText(t[7]))
   };
 }
 async function salvarDados(){
@@ -862,7 +862,7 @@ async function salvarDados(){
   const receptores=Array.from(document.querySelectorAll('#dados-receptor tbody tr')).map(rowToReceptor);
 
   const faltaHorario=transmissores.some(tx=>!tx.horario_coleta)||receptores.some(rx=>!rx.horario_coleta);
-  const faltaTemp=transmissores.some(tx=>tx.temperatura_local==null)||receptores.some(rx=>rx.temperatura_local==null);
+  const faltaTemp=transmissores.some(tx=>tx.temp_celsius==null)||receptores.some(rx=>rx.temp_celsius==null);
   if(faltaHorario||faltaTemp){ alert('Há linhas sem horário e/ou temperatura. Complete antes de salvar.'); return; }
 
   const payload={ estacao, data_coleta: document.getElementById('data_coleta')?.value || null, transmissores, receptores };
