@@ -3,6 +3,7 @@ import logging
 import datetime
 from collections import defaultdict
 
+from cdv_api.servicos.clima import obter_temperatura_estacao
 import openpyxl
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
@@ -20,7 +21,6 @@ from openpyxl.styles import PatternFill, Font
 from openpyxl.utils import get_column_letter
 from .models import Estacao, Transmissor, Receptor
 import unicodedata
-
 logger = logging.getLogger(__name__)
 
 
@@ -1291,3 +1291,35 @@ def dashboard_manutencao(request):
     }
 
     return render(request, "cdv_api/dashboard_manutencao.html", context)
+        
+@login_required
+def buscar_temperatura_estacao(request):
+    estacao_nome = request.GET.get("estacao")
+
+    if not estacao_nome:
+        return JsonResponse({"ok": False, "erro": "Estação não informada."}, status=400)
+
+    try:
+        clima = obter_temperatura_estacao(estacao_nome)
+        
+        logger.info(
+            "[CLIMA] Estação=%s Temp=%.2f Fonte=%s",
+            estacao_nome,
+            clima["temperatura"],
+            clima.get("fonte"),
+        )
+
+        return JsonResponse({
+            "ok": True,
+            "temperatura": clima["temperatura"],
+            "umidade": clima.get("umidade"),
+            "fonte": clima.get("fonte"),
+            "coletado_em": str(clima.get("coletado_em")),
+            "fallback": clima.get("fonte") == "banco_local"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "ok": False,
+            "erro": str(e),
+        }, status=500)

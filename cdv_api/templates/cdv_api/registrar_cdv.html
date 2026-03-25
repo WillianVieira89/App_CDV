@@ -8,7 +8,6 @@
 
 <div class="pagina-cdv">
 
-  <!-- Cabeçalho -->
   <div class="header-cdv">
     <div>
       <h1>Registrar Dados do CDV</h1>
@@ -16,13 +15,10 @@
     </div>
   </div>
 
-  <!-- Data da coleta (oculta; remova hidden se quiser exibir) -->
   <input type="date" id="data_coleta" hidden>
 
-  <!-- Área principal -->
   <div class="blocos-equipamentos">
 
-    <!-- ===================== TRANSMISSOR ===================== -->
     <div id="transmissores-container" class="card-formulario">
       <h2 class="titulo-bloco">Transmissor</h2>
 
@@ -86,7 +82,6 @@
       </div>
     </div>
 
-    <!-- ===================== RECEPTOR ===================== -->
     <div id="receptores-container" class="card-formulario">
       <h2 class="titulo-bloco">Receptor</h2>
 
@@ -144,7 +139,6 @@
 
   </div>
 
-  <!-- ===================== TABELAS ===================== -->
   <div id="visualizacao-container" class="mt-4">
 
     <div class="card-formulario">
@@ -202,7 +196,6 @@
 
   </div>
 
-  <!-- Ações finais -->
   <div class="acoes-finais">
     <button type="button" id="salvarDadosBtn" class="btn-primario">Salvar Dados</button>
     <button type="button" id="btnLimparTudo" class="btn-neutro">Limpar Tudo</button>
@@ -455,11 +448,9 @@
   }
 </style>
 
-<!-- Se seu projeto usa um JS global, mantenha-o -->
 <script src="{% static 'js/script.js' %}"></script>
 
 <script>
-/* ===================== Utilidades básicas ===================== */
 function getCookie(name){
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -474,8 +465,12 @@ function getCookie(name){
   }
   return cookieValue;
 }
+
 function pad2(n){return String(n).padStart(2,'0');}
-function todayISO(){const d=new Date();return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;}
+function todayISO(){
+  const d=new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
 function toHHMM(s){
   if(s==null) return '';
   s=String(s).trim();
@@ -485,14 +480,28 @@ function toHHMM(s){
   const mm=String(Math.min(59,Math.max(0,parseInt(m[2],10)))).padStart(2,'0');
   return `${hh}:${mm}`;
 }
-function isValidHHMM(s){ return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s).trim()); }
+function isValidHHMM(s){
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s).trim());
+}
 function validarObrigatorioHHMMOuFocar(el,label){
-  const v = toHHMM(el.value); el.value = v;
-  if (!isValidHHMM(v)){ alert(`Horário de ${label} inválido. Use HH:MM.`); el.focus(); return false; }
+  const v = toHHMM(el.value);
+  el.value = v;
+  if (!isValidHHMM(v)){
+    alert(`Horário de ${label} inválido. Use HH:MM.`);
+    el.focus();
+    return false;
+  }
   return true;
 }
-function toFloatOrNull(v){const s=(''+(v??'')).replace(',','.').trim();if(s==='')return null;const n=Number(s);return Number.isFinite(n)?n:null;}
-function cellText(td){return (td?.textContent??'').trim();}
+function toFloatOrNull(v){
+  const s=(''+(v??'')).replace(',','.').trim();
+  if(s==='') return null;
+  const n=Number(s);
+  return Number.isFinite(n)?n:null;
+}
+function cellText(td){
+  return (td?.textContent??'').trim();
+}
 function atualizarContadores(){
   const tx = document.querySelectorAll('#dados-transmissor tbody tr').length;
   const rx = document.querySelectorAll('#dados-receptor tbody tr').length;
@@ -500,26 +509,6 @@ function atualizarContadores(){
   document.getElementById('contador-rx').textContent = rx;
 }
 
-/* ===================== Coordenadas Linha 5 — e aliases ===================== */
-const STATION_COORDS={
-  "Capão Redondo":{lat:-23.659253,lon:-46.768178},
-  "Campo Limpo":{lat:-23.649374,lon:-46.759148},
-  "Vila das Belezas":{lat:-23.640556,lon:-46.745833},
-  "Giovanni Gronchi":{lat:-23.643964,lon:-46.734247},
-  "Santo Amaro":{lat:-23.655693,lon:-46.720428},
-  "Largo Treze":{lat:-23.654524,lon:-46.710343},
-  "Adolfo Pinheiro":{lat:-23.650100,lon:-46.704200},
-  "Alto da Boa Vista":{lat:-23.641944,lon:-46.699722},
-  "Borba Gato":{lat:-23.633333,lon:-46.692778},
-  "Brooklin":{lat:-23.627164,lon:-46.688350},
-  "Campo Belo":{lat:-23.618889,lon:-46.682333},
-  "Eucaliptos":{lat:-23.610000,lon:-46.668611},
-  "Moema":{lat:-23.603611,lon:-46.661944},
-  "AACD Servidor":{lat:-23.597778,lon:-46.651944},
-  "Hospital São Paulo":{lat:-23.5954,lon:-46.6508},
-  "Santa Cruz":{lat:-23.598410,lon:-46.637040},
-  "Chácara Klabin":{lat:-23.592503,lon:-46.629978}
-};
 function norm(s){
   return String(s||'')
     .replace(/\u00A0/g,' ')
@@ -527,7 +516,8 @@ function norm(s){
     .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g,'-')
     .toLowerCase().trim();
 }
-const STATION_ALIAS={
+
+const STATION_ALIAS = {
   "hospital sao-paulo":"Hospital São Paulo",
   "hospital sao paulo":"Hospital São Paulo",
   "aacd servidor":"AACD Servidor",
@@ -535,16 +525,7 @@ const STATION_ALIAS={
   "chacara klabin":"Chácara Klabin",
   "chácara klabin":"Chácara Klabin"
 };
-function resolveStationName(raw){
-  if (STATION_COORDS[raw]) return raw;
-  const ali = STATION_ALIAS[norm(raw)];
-  if (ali && STATION_COORDS[ali]) return ali;
-  const byNorm = {};
-  for (const [k] of Object.entries(STATION_COORDS)) byNorm[norm(k)] = k;
-  return byNorm[norm(raw)] || raw;
-}
 
-/* ===================== Circuitos por estação ===================== */
 window.CIRCUITOS_POR_ESTACAO = {
   "Capão Redondo": [],
   "Campo Limpo": [],
@@ -599,112 +580,91 @@ window.CIRCUITOS_POR_ESTACAO = {
   ]
 };
 
-/* ===================== Preencher selects TX/RX ===================== */
 function getCircuitosDaEstacao(nomeSpan){
   const raw = (nomeSpan||'').trim();
   if (window.CIRCUITOS_POR_ESTACAO[raw]) return window.CIRCUITOS_POR_ESTACAO[raw];
+
   const mapaNorm = {};
-  for (const [k,v] of Object.entries(window.CIRCUITOS_POR_ESTACAO)) mapaNorm[norm(k)] = v;
+  for (const [k,v] of Object.entries(window.CIRCUITOS_POR_ESTACAO)) {
+    mapaNorm[norm(k)] = v;
+  }
+
   const alias = STATION_ALIAS[norm(raw)];
   if (alias && window.CIRCUITOS_POR_ESTACAO[alias]) return window.CIRCUITOS_POR_ESTACAO[alias];
+
   return mapaNorm[norm(raw)] || [];
 }
+
 function preencherSelect(id, lista){
   const sel = document.getElementById(id);
   if (!sel) return;
+
   sel.innerHTML = '<option value="">Selecione...</option>';
+
   const ordenada = Array.from(new Set(lista)).sort();
   for (const c of ordenada){
     const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
+    opt.value = c;
+    opt.textContent = c;
     sel.appendChild(opt);
   }
+
   sel.disabled = ordenada.length === 0;
 }
+
 function reforcarPreenchimento(){
   const est = document.getElementById('nome_estacao')?.textContent || '';
   const lista = getCircuitosDaEstacao(est);
-  console.log('[CDV] Estação:', JSON.stringify(est));
-  console.log('[CDV] Circuitos resolvidos:', lista);
   preencherSelect('num_circuito_tx_1', lista);
   preencherSelect('num_circuito_rx_1', lista);
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   const d = document.getElementById('data_coleta');
   if (d && !d.value) d.value = todayISO();
+
   reforcarPreenchimento();
   setTimeout(reforcarPreenchimento, 0);
-  ['num_circuito_tx_1','num_circuito_rx_1'].forEach(id=>{
+
+  ['num_circuito_tx_1','num_circuito_rx_1'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('focus', reforcarPreenchimento, { once:true });
   });
+
   atualizarContadores();
 });
 
-/* ===================== Temperatura horária ===================== */
-async function fetchStationHourlyTemp(estacaoNome, dateStr, hhmm){
-  const resolved = resolveStationName(estacaoNome);
-  const coords = STATION_COORDS[resolved];
-
-  if (!coords) {
-    alert(`Sem coordenadas para "${estacaoNome}".`);
-    return null;
-  }
-
-  const hh = (hhmm || '00:00').slice(0, 2);
-  const hoje = todayISO();
-
-  let url = "";
-
-  // Hoje -> Forecast API
-  if (dateStr === hoje) {
-    url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m&timezone=America%2FSao_Paulo&forecast_days=1`;
-  } else {
-    // Datas passadas -> Archive API
-    url = `https://archive-api.open-meteo.com/v1/archive?latitude=${coords.lat}&longitude=${coords.lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m&timezone=America%2FSao_Paulo`;
-  }
-
+async function buscarTemperaturaBackend(estacao) {
   try {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('Falha na API de temperatura');
+    const resp = await fetch(`/buscar-temperatura-estacao/?estacao=${encodeURIComponent(estacao)}`);
+    const data = await resp.json();
 
-    const data = await r.json();
-    const times = data?.hourly?.time || [];
-    const temps = data?.hourly?.temperature_2m || [];
-
-    const alvo = `${dateStr}T${hh}:00`;
-    let idx = times.indexOf(alvo);
-
-    if (idx === -1) {
-      const h = parseInt(hh, 10);
-      const alt1 = `${dateStr}T${pad2(Math.max(0, h - 1))}:00`;
-      const alt2 = `${dateStr}T${pad2(Math.min(23, h + 1))}:00`;
-
-      idx = times.indexOf(alt1);
-      if (idx === -1) idx = times.indexOf(alt2);
+    if (!data.ok) {
+      console.warn("Erro ao buscar temperatura:", data.erro);
+      return null;
     }
 
-    if (idx === -1) return null;
+    console.log("Temperatura via", data.fonte, ":", data.temperatura);
+    return data.temperatura;
 
-    const t = temps[idx];
-    return (typeof t === 'number') ? Number(t.toFixed(1)) : null;
-
-  } catch (e) {
-    console.error('[Temperatura]', e);
+  } catch (error) {
+    console.error("Erro na API interna:", error);
     return null;
   }
 }
 
-/* ===================== Tabelas / ações ===================== */
 function appendRow(tbodyId,cells){
   const tbody=document.querySelector('#'+tbodyId+' tbody');
   const tr=document.createElement('tr');
+
   for(const c of cells){
     const td=document.createElement('td');
     td.textContent=(c==null||c==='')?'-':c;
     tr.appendChild(td);
   }
+
   const tdAcoes=document.createElement('td');
+
   const btnEdit=document.createElement('button');
   btnEdit.type='button';
   btnEdit.className='btn-green';
@@ -721,8 +681,10 @@ function appendRow(tbodyId,cells){
   tbody.appendChild(tr);
 
   const isTX=(tbodyId==='dados-transmissor');
+
   btnEdit.addEventListener('click',function(){
     const tds=tr.querySelectorAll('td');
+
     if(isTX){
       document.getElementById('num_circuito_tx_1').value = tds[0].textContent.trim();
       document.getElementsByName('num_transmissor[]')[0].value = tds[1].textContent.trim();
@@ -741,22 +703,25 @@ function appendRow(tbodyId,cells){
       document.getElementsByName('tipo_manutencao_rx_1[]')[0].value = tds[5].textContent.trim();
       document.getElementById('horario_coleta_rx_1').value = toHHMM(tds[6].textContent.trim());
     }
+
     tr.remove();
     atualizarContadores();
   });
+
   btnDel.addEventListener('click',()=>{
     tr.remove();
     atualizarContadores();
   });
+
   atualizarContadores();
 }
 
-/* ===================== Relação dinâmica ===================== */
 function calcularRelacaoDinamica(input){
   const b = input.closest('.receptor-bloco');
   const iav = parseFloat(b.querySelector('[name="iav[]"]').value);
   const ith = parseFloat(b.querySelector('[name="ith[]"]').value);
   const out = b.querySelector('[name="relacao_dinamica[]"]');
+
   if (Number.isFinite(iav) && Number.isFinite(ith) && iav !== 0){
     out.value = ((ith/iav)*100).toFixed(2) + '%';
   } else {
@@ -764,7 +729,6 @@ function calcularRelacaoDinamica(input){
   }
 }
 
-/* ===================== Adicionar TX/RX ===================== */
 async function adicionarTransmissor(){
   const est = document.getElementById('nome_estacao')?.textContent?.trim()||'';
   const circuito = document.getElementById('num_circuito_tx_1').value;
@@ -773,52 +737,66 @@ async function adicionarTransmissor(){
   const pout = document.getElementsByName('pout[]')[0].value;
   const tap  = document.getElementsByName('tap[]')[0].value;
   const tipo = document.getElementsByName('tipo_transmissor[]')[0].value;
-  const manut= document.getElementsByName('tipo_manutencao_tx_1[]')[0].value;
-  const horaEl=document.getElementById('horario_coleta_tx_1');
-  if (!circuito || !tx || !vout || !pout || !tap || !manut || !horaEl.value){ alert('Preencha todos os campos do Transmissor.'); return; }
+  const manut = document.getElementsByName('tipo_manutencao_tx_1[]')[0].value;
+  const horaEl = document.getElementById('horario_coleta_tx_1');
+
+  if (!circuito || !tx || !vout || !pout || !tap || !manut || !horaEl.value){
+    alert('Preencha todos os campos do Transmissor.');
+    return;
+  }
+
   if (!validarObrigatorioHHMMOuFocar(horaEl,'TX')) return;
 
-  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
-  const temp = await fetchStationHourlyTemp(est, dataStr, horaEl.value);
+  const temp = await buscarTemperaturaBackend(est);
+  const tempFinal = temp ?? "";
 
-  appendRow('dados-transmissor', [circuito, tx, vout, pout, tap, tipo, manut, toHHMM(horaEl.value), (temp??'-')]);
+  appendRow('dados-transmissor', [
+    circuito, tx, vout, pout, tap, tipo, manut, toHHMM(horaEl.value), tempFinal
+  ]);
 
   document.getElementById('num_circuito_tx_1').selectedIndex = 0;
-  document.getElementsByName('num_transmissor[]')[0].value='';
-  document.getElementsByName('vout[]')[0].value='';
-  document.getElementsByName('pout[]')[0].value='';
-  document.getElementsByName('tap[]')[0].value='';
-  document.getElementsByName('tipo_transmissor[]')[0].selectedIndex=0;
-  document.getElementsByName('tipo_manutencao_tx_1[]')[0].selectedIndex=0;
-  horaEl.value='';
+  document.getElementsByName('num_transmissor[]')[0].value = '';
+  document.getElementsByName('vout[]')[0].value = '';
+  document.getElementsByName('pout[]')[0].value = '';
+  document.getElementsByName('tap[]')[0].value = '';
+  document.getElementsByName('tipo_transmissor[]')[0].selectedIndex = 0;
+  document.getElementsByName('tipo_manutencao_tx_1[]')[0].selectedIndex = 0;
+  horaEl.value = '';
 }
+
 async function adicionarReceptor(){
   const est = document.getElementById('nome_estacao')?.textContent?.trim()||'';
-  const circuito=document.getElementById('num_circuito_rx_1').value;
-  const rx=document.getElementsByName('num_receptor[]')[0].value;
-  const iav=document.getElementsByName('iav[]')[0].value;
-  const ith=document.getElementsByName('ith[]')[0].value;
-  const rel=document.getElementsByName('relacao_dinamica[]')[0].value;
-  const manut=document.getElementsByName('tipo_manutencao_rx_1[]')[0].value;
-  const horaEl=document.getElementById('horario_coleta_rx_1');
-  if (!circuito || !rx || !iav || !ith || !manut || !horaEl.value){ alert('Preencha todos os campos do Receptor.'); return; }
+  const circuito = document.getElementById('num_circuito_rx_1').value;
+  const rx = document.getElementsByName('num_receptor[]')[0].value;
+  const iav = document.getElementsByName('iav[]')[0].value;
+  const ith = document.getElementsByName('ith[]')[0].value;
+  const rel = document.getElementsByName('relacao_dinamica[]')[0].value;
+  const manut = document.getElementsByName('tipo_manutencao_rx_1[]')[0].value;
+  const horaEl = document.getElementById('horario_coleta_rx_1');
+
+  if (!circuito || !rx || !iav || !ith || !manut || !horaEl.value){
+    alert('Preencha todos os campos do Receptor.');
+    return;
+  }
+
   if (!validarObrigatorioHHMMOuFocar(horaEl,'RX')) return;
 
-  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
-  const temp = await fetchStationHourlyTemp(est, dataStr, horaEl.value);
+  const temp = await buscarTemperaturaBackend(est);
+  const tempFinal = temp ?? "";
 
-  appendRow('dados-receptor', [circuito, rx, iav, ith, rel, manut, toHHMM(horaEl.value), (temp??'-')]);
+  appendRow('dados-receptor', [
+    circuito, rx, iav, ith, rel, manut, toHHMM(horaEl.value), tempFinal
+  ]);
 
-  document.getElementById('num_circuito_rx_1').selectedIndex=0;
-  document.getElementsByName('num_receptor[]')[0].value='';
-  document.getElementsByName('iav[]')[0].value='';
-  document.getElementsByName('ith[]')[0].value='';
-  document.getElementsByName('relacao_dinamica[]')[0].value='';
-  document.getElementsByName('tipo_manutencao_rx_1[]')[0].selectedIndex=0;
-  horaEl.value='';
+  document.getElementById('num_circuito_rx_1').selectedIndex = 0;
+  document.getElementsByName('num_receptor[]')[0].value = '';
+  document.getElementsByName('iav[]')[0].value = '';
+  document.getElementsByName('ith[]')[0].value = '';
+  document.getElementsByName('relacao_dinamica[]')[0].value = '';
+  document.getElementsByName('tipo_manutencao_rx_1[]')[0].selectedIndex = 0;
+  horaEl.value = '';
 }
 
-/* ===================== Normalização de Tipo ===================== */
 function normalizaTipoManutencao(txt){
   const t=(txt||'').toLowerCase().trim();
   if (t.startsWith('corret')) return 'corretiva';
@@ -826,7 +804,6 @@ function normalizaTipoManutencao(txt){
   return 'preventiva';
 }
 
-/* ===================== Salvar ===================== */
 function rowToTransmissor(tr){
   const t=tr.querySelectorAll('td');
   return {
@@ -841,10 +818,12 @@ function rowToTransmissor(tr){
     temp_celsius: toFloatOrNull(cellText(t[8]))
   };
 }
+
 function rowToReceptor(tr){
   const t=tr.querySelectorAll('td');
   const relStr=(cellText(t[4])||'').replace('%','').replace(',','.');
   const relNum=relStr===''?null:Number(relStr);
+
   return {
     num_circuito: cellText(t[0])||null,
     num_receptor: cellText(t[1])||null,
@@ -856,60 +835,85 @@ function rowToReceptor(tr){
     temp_celsius: toFloatOrNull(cellText(t[7]))
   };
 }
+
 async function salvarDados(){
-  const estacao=document.getElementById('nome_estacao')?.textContent?.trim()||'';
-  const transmissores=Array.from(document.querySelectorAll('#dados-transmissor tbody tr')).map(rowToTransmissor);
-  const receptores=Array.from(document.querySelectorAll('#dados-receptor tbody tr')).map(rowToReceptor);
+  const estacao = document.getElementById('nome_estacao')?.textContent?.trim() || '';
+  const transmissores = Array.from(document.querySelectorAll('#dados-transmissor tbody tr')).map(rowToTransmissor);
+  const receptores = Array.from(document.querySelectorAll('#dados-receptor tbody tr')).map(rowToReceptor);
 
-  const faltaHorario=transmissores.some(tx=>!tx.horario_coleta)||receptores.some(rx=>!rx.horario_coleta);
-  const faltaTemp=transmissores.some(tx=>tx.temp_celsius==null)||receptores.some(rx=>rx.temp_celsius==null);
-  if(faltaHorario||faltaTemp){ alert('Há linhas sem horário e/ou temperatura. Complete antes de salvar.'); return; }
+  const faltaHorario = transmissores.some(tx => !tx.horario_coleta) || receptores.some(rx => !rx.horario_coleta);
 
-  const payload={ estacao, data_coleta: document.getElementById('data_coleta')?.value || null, transmissores, receptores };
+  if (faltaHorario) {
+    alert('Há linhas sem horário. Complete antes de salvar.');
+    return;
+  }
 
-  try{
-    const resp=await fetch("{% url 'salvar_dados_cdv' %}",{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
-      body:JSON.stringify(payload)
+  const payload = {
+    estacao,
+    data_coleta: document.getElementById('data_coleta')?.value || null,
+    transmissores,
+    receptores
+  };
+
+  try {
+    const resp = await fetch("{% url 'salvar_dados_cdv' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(payload)
     });
-    const data=await resp.json();
-    if(!resp.ok) throw new Error(data.message||'Falha ao salvar');
-    alert(data.message||'Dados salvos com sucesso!');
-    document.querySelector('#dados-transmissor tbody').innerHTML='';
-    document.querySelector('#dados-receptor tbody').innerHTML='';
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.message || 'Falha ao salvar');
+
+    alert(data.message || 'Dados salvos com sucesso!');
+    document.querySelector('#dados-transmissor tbody').innerHTML = '';
+    document.querySelector('#dados-receptor tbody').innerHTML = '';
     atualizarContadores();
-  }catch(e){
+  } catch (e) {
     alert('Erro ao salvar: ' + e.message);
   }
 }
+
 document.getElementById('salvarDadosBtn')?.addEventListener('click', salvarDados);
 
-/* ===================== Gerar Excel ===================== */
 document.getElementById('btnGerarExcel')?.addEventListener('click', function(){
   const base="{% url 'gerar_relatorio_excel_page' %}";
   const est = document.getElementById('nome_estacao')?.textContent?.trim()||"";
-  if(!est){ alert("Nenhuma estação selecionada!"); return; }
+  if(!est){
+    alert("Nenhuma estação selecionada!");
+    return;
+  }
   const params=new URLSearchParams({ last_estacao_nome: est });
   window.location.href=`${base}?${params.toString()}`;
 });
 
-/* ===================== Limpar tudo ===================== */
 document.getElementById('btnLimparTudo')?.addEventListener('click', function(){
   document.querySelector('#dados-transmissor tbody').innerHTML='';
   document.querySelector('#dados-receptor tbody').innerHTML='';
+
   ['num_circuito_tx_1','num_circuito_rx_1'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.selectedIndex=0;
+    const el=document.getElementById(id);
+    if(el) el.selectedIndex=0;
   });
+
   ['num_transmissor[]','vout[]','pout[]','tap[]','num_receptor[]','iav[]','ith[]','relacao_dinamica[]'].forEach(n=>{
-    const el=document.getElementsByName(n)[0]; if(el) el.value='';
+    const el=document.getElementsByName(n)[0];
+    if(el) el.value='';
   });
+
   ['tipo_transmissor[]','tipo_manutencao_tx_1[]','tipo_manutencao_rx_1[]'].forEach(n=>{
-    const el=document.getElementsByName(n)[0]; if(el) el.selectedIndex=0;
+    const el=document.getElementsByName(n)[0];
+    if(el) el.selectedIndex=0;
   });
+
   ['horario_coleta_tx_1','horario_coleta_rx_1'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
+    const el=document.getElementById(id);
+    if(el) el.value='';
   });
+
   atualizarContadores();
 });
 </script>
