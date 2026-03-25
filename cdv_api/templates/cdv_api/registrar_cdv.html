@@ -642,11 +642,27 @@ async function buscarTemperaturaBackend(estacao, dataColeta, horaColeta) {
       hora: horaColeta || ""
     });
 
-    const resp = await fetch(`{% url 'buscar_temperatura_estacao' %}?${params.toString()}`);
+    const url = `{% url 'buscar_temperatura_estacao' %}?${params.toString()}`;
+
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    });
+
+    const contentType = resp.headers.get("content-type") || "";
+
+    if (!contentType.includes("application/json")) {
+      const texto = await resp.text();
+      console.error("Resposta não é JSON:", texto.slice(0, 300));
+      return null;
+    }
+
     const data = await resp.json();
 
-    if (!data.ok) {
-      console.warn("Erro ao buscar temperatura:", data.erro);
+    if (!resp.ok || !data.ok) {
+      console.warn("Erro ao buscar temperatura:", data.erro || "Falha desconhecida");
       return null;
     }
 
@@ -657,6 +673,91 @@ async function buscarTemperaturaBackend(estacao, dataColeta, horaColeta) {
     console.error("Erro na API interna:", error);
     return null;
   }
+}
+
+async function adicionarTransmissor() {
+  const est = document.getElementById('nome_estacao')?.textContent?.trim() || '';
+  const circuito = document.getElementById('num_circuito_tx_1').value;
+  const tx = document.getElementsByName('num_transmissor[]')[0].value;
+  const vout = document.getElementsByName('vout[]')[0].value;
+  const pout = document.getElementsByName('pout[]')[0].value;
+  const tap = document.getElementsByName('tap[]')[0].value;
+  const tipo = document.getElementsByName('tipo_transmissor[]')[0].value;
+  const manut = document.getElementsByName('tipo_manutencao_tx_1[]')[0].value;
+  const horaEl = document.getElementById('horario_coleta_tx_1');
+
+  if (!circuito || !tx || !vout || !pout || !tap || !manut || !horaEl.value) {
+    alert('Preencha todos os campos do Transmissor.');
+    return;
+  }
+
+  if (!validarObrigatorioHHMMOuFocar(horaEl, 'TX')) return;
+
+  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
+  const temp = await buscarTemperaturaBackend(est, dataStr, horaEl.value);
+  const tempFinal = temp ?? "";
+
+  appendRow('dados-transmissor', [
+    circuito,
+    tx,
+    vout,
+    pout,
+    tap,
+    tipo,
+    manut,
+    toHHMM(horaEl.value),
+    tempFinal
+  ]);
+
+  document.getElementById('num_circuito_tx_1').selectedIndex = 0;
+  document.getElementsByName('num_transmissor[]')[0].value = '';
+  document.getElementsByName('vout[]')[0].value = '';
+  document.getElementsByName('pout[]')[0].value = '';
+  document.getElementsByName('tap[]')[0].value = '';
+  document.getElementsByName('tipo_transmissor[]')[0].selectedIndex = 0;
+  document.getElementsByName('tipo_manutencao_tx_1[]')[0].selectedIndex = 0;
+  horaEl.value = '';
+}
+
+async function adicionarReceptor() {
+  const est = document.getElementById('nome_estacao')?.textContent?.trim() || '';
+  const circuito = document.getElementById('num_circuito_rx_1').value;
+  const rx = document.getElementsByName('num_receptor[]')[0].value;
+  const iav = document.getElementsByName('iav[]')[0].value;
+  const ith = document.getElementsByName('ith[]')[0].value;
+  const rel = document.getElementsByName('relacao_dinamica[]')[0].value;
+  const manut = document.getElementsByName('tipo_manutencao_rx_1[]')[0].value;
+  const horaEl = document.getElementById('horario_coleta_rx_1');
+
+  if (!circuito || !rx || !iav || !ith || !manut || !horaEl.value) {
+    alert('Preencha todos os campos do Receptor.');
+    return;
+  }
+
+  if (!validarObrigatorioHHMMOuFocar(horaEl, 'RX')) return;
+
+  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
+  const temp = await buscarTemperaturaBackend(est, dataStr, horaEl.value);
+  const tempFinal = temp ?? "";
+
+  appendRow('dados-receptor', [
+    circuito,
+    rx,
+    iav,
+    ith,
+    rel,
+    manut,
+    toHHMM(horaEl.value),
+    tempFinal
+  ]);
+
+  document.getElementById('num_circuito_rx_1').selectedIndex = 0;
+  document.getElementsByName('num_receptor[]')[0].value = '';
+  document.getElementsByName('iav[]')[0].value = '';
+  document.getElementsByName('ith[]')[0].value = '';
+  document.getElementsByName('relacao_dinamica[]')[0].value = '';
+  document.getElementsByName('tipo_manutencao_rx_1[]')[0].selectedIndex = 0;
+  horaEl.value = '';
 }
 
 function appendRow(tbodyId,cells){
@@ -735,114 +836,6 @@ function calcularRelacaoDinamica(input){
   }
 }
 
-async function adicionarTransmissor(){
-  const est = document.getElementById('nome_estacao')?.textContent?.trim()||'';
-  const circuito = document.getElementById('num_circuito_tx_1').value;
-  const tx = document.getElementsByName('num_transmissor[]')[0].value;
-  const vout = document.getElementsByName('vout[]')[0].value;
-  const pout = document.getElementsByName('pout[]')[0].value;
-  const tap  = document.getElementsByName('tap[]')[0].value;
-  const tipo = document.getElementsByName('tipo_transmissor[]')[0].value;
-  const manut = document.getElementsByName('tipo_manutencao_tx_1[]')[0].value;
-  const horaEl = document.getElementById('horario_coleta_tx_1');
-
-  if (!circuito || !tx || !vout || !pout || !tap || !manut || !horaEl.value){
-    alert('Preencha todos os campos do Transmissor.');
-    return;
-  }
-
-  if (!validarObrigatorioHHMMOuFocar(horaEl,'TX')) return;
-
-  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
-  const temp = await buscarTemperaturaBackend(est, dataStr, horaEl.value);
-  const tempFinal = temp ?? "";
-
-  appendRow('dados-transmissor', [
-    circuito, tx, vout, pout, tap, tipo, manut, toHHMM(horaEl.value), tempFinal
-  ]);
-
-  document.getElementById('num_circuito_tx_1').selectedIndex = 0;
-  document.getElementsByName('num_transmissor[]')[0].value = '';
-  document.getElementsByName('vout[]')[0].value = '';
-  document.getElementsByName('pout[]')[0].value = '';
-  document.getElementsByName('tap[]')[0].value = '';
-  document.getElementsByName('tipo_transmissor[]')[0].selectedIndex = 0;
-  document.getElementsByName('tipo_manutencao_tx_1[]')[0].selectedIndex = 0;
-  horaEl.value = '';
-}
-
-async function adicionarReceptor(){
-  const est = document.getElementById('nome_estacao')?.textContent?.trim()||'';
-  const circuito = document.getElementById('num_circuito_rx_1').value;
-  const rx = document.getElementsByName('num_receptor[]')[0].value;
-  const iav = document.getElementsByName('iav[]')[0].value;
-  const ith = document.getElementsByName('ith[]')[0].value;
-  const rel = document.getElementsByName('relacao_dinamica[]')[0].value;
-  const manut = document.getElementsByName('tipo_manutencao_rx_1[]')[0].value;
-  const horaEl = document.getElementById('horario_coleta_rx_1');
-
-  if (!circuito || !rx || !iav || !ith || !manut || !horaEl.value){
-    alert('Preencha todos os campos do Receptor.');
-    return;
-  }
-
-  if (!validarObrigatorioHHMMOuFocar(horaEl,'RX')) return;
-
-  const dataStr = document.getElementById('data_coleta')?.value || todayISO();
-  const temp = await buscarTemperaturaBackend(est, dataStr, horaEl.value);
-  const tempFinal = temp ?? "";
-
-  appendRow('dados-receptor', [
-    circuito, rx, iav, ith, rel, manut, toHHMM(horaEl.value), tempFinal
-  ]);
-
-  document.getElementById('num_circuito_rx_1').selectedIndex = 0;
-  document.getElementsByName('num_receptor[]')[0].value = '';
-  document.getElementsByName('iav[]')[0].value = '';
-  document.getElementsByName('ith[]')[0].value = '';
-  document.getElementsByName('relacao_dinamica[]')[0].value = '';
-  document.getElementsByName('tipo_manutencao_rx_1[]')[0].selectedIndex = 0;
-  horaEl.value = '';
-}
-
-function normalizaTipoManutencao(txt){
-  const t=(txt||'').toLowerCase().trim();
-  if (t.startsWith('corret')) return 'corretiva';
-  if (t.startsWith('check'))  return 'checklist';
-  return 'preventiva';
-}
-
-function rowToTransmissor(tr){
-  const t=tr.querySelectorAll('td');
-  return {
-    num_circuito: cellText(t[0])||null,
-    num_transmissor: cellText(t[1])||null,
-    vout: toFloatOrNull(cellText(t[2])),
-    pout: toFloatOrNull(cellText(t[3])),
-    tap: cellText(t[4]),
-    tipo_transmissor: cellText(t[5]),
-    tipo_manutencao: normalizaTipoManutencao(cellText(t[6])),
-    horario_coleta: cellText(t[7])||null,
-    temp_celsius: toFloatOrNull(cellText(t[8]))
-  };
-}
-
-function rowToReceptor(tr){
-  const t=tr.querySelectorAll('td');
-  const relStr=(cellText(t[4])||'').replace('%','').replace(',','.');
-  const relNum=relStr===''?null:Number(relStr);
-
-  return {
-    num_circuito: cellText(t[0])||null,
-    num_receptor: cellText(t[1])||null,
-    iav: toFloatOrNull(cellText(t[2])),
-    ith: toFloatOrNull(cellText(t[3])),
-    relacao: Number.isFinite(relNum)?relNum:null,
-    tipo_manutencao: normalizaTipoManutencao(cellText(t[5])),
-    horario_coleta: cellText(t[6])||null,
-    temp_celsius: toFloatOrNull(cellText(t[7]))
-  };
-}
 
 async function salvarDados(){
   const estacao = document.getElementById('nome_estacao')?.textContent?.trim() || '';

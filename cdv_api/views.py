@@ -1324,6 +1324,7 @@ def buscar_temperatura_estacao(request):
             "fonte": clima.get("fonte"),
         })
     except Exception as e:
+        logger.exception("Erro ao buscar temperatura da estação")
         return JsonResponse({
             "ok": False,
             "erro": str(e),
