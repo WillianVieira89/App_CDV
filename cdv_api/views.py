@@ -55,10 +55,13 @@ def _norm_manutencao(valor):
     }
     return mapa.get(v, "preventiva")
 
-
 def _pick_temp(d):
-    return safe_float(d.get("temp_celsius", d.get("temperatura_local")))
+    temp = d.get("temp_celsius")
 
+    if temp in (None, "", "null"):
+        temp = d.get("temperatura_local")
+
+    return safe_float(temp)
 
 def relacao_para_float(relacao_str):
     if not relacao_str:
