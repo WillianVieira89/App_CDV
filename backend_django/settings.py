@@ -6,8 +6,11 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 🔥 escolhe qual .env carregar
-if os.getenv("ENV") == "PROD":
+# ------------------ Ambiente ------------------
+ENV = os.getenv("ENV", "DEV").upper()
+
+# escolhe qual .env carregar
+if ENV == "PROD":
     load_dotenv(BASE_DIR / ".env.prod")
 else:
     load_dotenv(BASE_DIR / ".env")
@@ -87,20 +90,29 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend_django.wsgi.application"
 
 # ------------------ Banco de dados ------------------
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("A variável de ambiente DATABASE_URL não foi definida.")
-
-DATABASES = {
-    "default": dj_database_url.parse(
-        DATABASE_URL,
-        conn_max_age=600,
-        ssl_require=True,
-    ), "legacy": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+SQLITE_DB = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": BASE_DIR / "db.sqlite3",
 }
+
+if ENV == "PROD":
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if not DATABASE_URL:
+        raise ValueError("A variável de ambiente DATABASE_URL não foi definida.")
+
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        ),
+        "legacy": SQLITE_DB,
+    }
+else:
+    DATABASES = {
+        "default": SQLITE_DB,
+        "legacy": SQLITE_DB,
+    }
 
 # ------------------ Arquivos estáticos ------------------
 STORAGES = {
