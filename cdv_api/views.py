@@ -959,7 +959,7 @@ def dashboard_manutencao(request):
         receptores = receptores.filter(data_manutencao__date__lte=data_fim)
 
     # ÚLTIMO REGISTRO DE CADA RX
-    receptores_atuais = (
+    receptores_atuais_ids = list(
         receptores
         .order_by(
             "estacao_id",
@@ -970,7 +970,10 @@ def dashboard_manutencao(request):
             "-id",
         )
         .distinct("estacao_id", "num_circuito", "num_receptor")
+        .values_list("id", flat=True)
     )
+
+    receptores_atuais = Receptor.objects.filter(id__in=receptores_atuais_ids)
 
     # TOTAIS
     total_tx = transmissores.count()
@@ -1146,7 +1149,7 @@ def dashboard_manutencao(request):
             relacao_circuitos_v2.append(item["circuito"])
             relacao_rxs_v2.append(item["rx"])
 
-    # DEGRADAÇÃO GRADUAL
+    # DEGRADAÇÃO GRADUAL (mantém histórico completo)
     circuitos_em_degradacao = detectar_degradacao_faixa(receptores)
 
     total_degradacao_negativa = sum(
@@ -1178,7 +1181,7 @@ def dashboard_manutencao(request):
         if circuito_filtro:
             rx_est = rx_est.filter(num_circuito__icontains=circuito_filtro)
 
-        rx_est_atuais = (
+        rx_est_atuais_ids = list(
             rx_est
             .order_by(
                 "estacao_id",
@@ -1189,7 +1192,10 @@ def dashboard_manutencao(request):
                 "-id",
             )
             .distinct("estacao_id", "num_circuito", "num_receptor")
+            .values_list("id", flat=True)
         )
+
+        rx_est_atuais = Receptor.objects.filter(id__in=rx_est_atuais_ids)
 
         relacoes_est = []
         for r in rx_est_atuais:
