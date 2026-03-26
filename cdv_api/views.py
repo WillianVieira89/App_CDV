@@ -920,7 +920,6 @@ def gerar_excel_estacao(request):
 # =========================
 # DASHBOARD
 # =========================
-
 @login_required
 def dashboard_manutencao(request):
     estacao_id = request.GET.get("estacao_id")
@@ -959,9 +958,23 @@ def dashboard_manutencao(request):
         transmissores = transmissores.filter(data_manutencao__date__lte=data_fim)
         receptores = receptores.filter(data_manutencao__date__lte=data_fim)
 
+    # ÚLTIMO REGISTRO DE CADA RX
+    receptores_atuais = (
+        receptores
+        .order_by(
+            "estacao_id",
+            "num_circuito",
+            "num_receptor",
+            "-data_manutencao",
+            "-horario_coleta",
+            "-id",
+        )
+        .distinct("estacao_id", "num_circuito", "num_receptor")
+    )
+
     # TOTAIS
     total_tx = transmissores.count()
-    total_rx = receptores.count()
+    total_rx = receptores_atuais.count()
 
     tx_por_circuito = (
         transmissores.values("num_circuito")
@@ -970,7 +983,7 @@ def dashboard_manutencao(request):
     )
 
     rx_por_circuito = (
-        receptores.values("num_circuito")
+        receptores_atuais.values("num_circuito")
         .annotate(total=Count("id"))
         .order_by("num_circuito")
     )
@@ -1003,7 +1016,7 @@ def dashboard_manutencao(request):
     # ÚLTIMOS RX / TX
     ultimos_tx = transmissores.order_by("-data_manutencao", "-id")[:10]
 
-    ultimos_rx_qs = receptores.order_by("-data_manutencao", "-id")[:10]
+    ultimos_rx_qs = receptores_atuais.order_by("-data_manutencao", "-horario_coleta", "-id")[:10]
     ultimos_rx = []
 
     for item in ultimos_rx_qs:
@@ -1023,13 +1036,13 @@ def dashboard_manutencao(request):
             "classe_relacao": classe_relacao,
         })
 
-    # CONTAGEM POR CIRCUITO (PIOR RX)
+    # CONTAGEM POR CIRCUITO (PIOR RX ATUAL)
     relacoes_por_circuito = {}
     contagem_abaixo_60 = 0
     contagem_entre_60_80 = 0
     contagem_acima_80 = 0
 
-    receptores_ordenados = receptores.order_by("num_circuito", "-data_manutencao", "-id")
+    receptores_ordenados = receptores_atuais.order_by("num_circuito", "num_receptor")
     agrupamento_circuitos = defaultdict(list)
 
     for r in receptores_ordenados:
@@ -1079,7 +1092,7 @@ def dashboard_manutencao(request):
     lista_relacoes = list(relacoes_por_circuito.values())
     lista_relacoes.sort(key=lambda x: (x["via"], x["circuito"]))
 
-    # GRÁFICOS POR VIA (RX)
+    # GRÁFICOS POR VIA (RX ATUAL)
     relacao_labels_v1 = []
     relacao_data_v1 = []
     relacao_cores_v1 = []
@@ -1092,22 +1105,17 @@ def dashboard_manutencao(request):
     relacao_circuitos_v2 = []
     relacao_rxs_v2 = []
 
-    receptores_grafico = receptores.order_by("num_circuito", "num_receptor", "-data_manutencao", "-id")
     ultimo_rx_por_circuito = {}
 
-    for r in receptores_grafico:
+    for r in receptores_atuais:
         circuito = (r.num_circuito or "").strip().upper()
         rx = r.num_receptor
-        chave = (circuito, rx)
-
-        if chave in ultimo_rx_por_circuito:
-            continue
-
         valor = relacao_para_float(r.relacao)
+
         if valor is None:
             continue
 
-        ultimo_rx_por_circuito[chave] = {
+        ultimo_rx_por_circuito[(circuito, rx)] = {
             "circuito": circuito,
             "rx": rx,
             "relacao": round(valor, 2),
@@ -1170,8 +1178,21 @@ def dashboard_manutencao(request):
         if circuito_filtro:
             rx_est = rx_est.filter(num_circuito__icontains=circuito_filtro)
 
+        rx_est_atuais = (
+            rx_est
+            .order_by(
+                "estacao_id",
+                "num_circuito",
+                "num_receptor",
+                "-data_manutencao",
+                "-horario_coleta",
+                "-id",
+            )
+            .distinct("estacao_id", "num_circuito", "num_receptor")
+        )
+
         relacoes_est = []
-        for r in rx_est.order_by("-data_manutencao", "-id"):
+        for r in rx_est_atuais:
             valor = relacao_para_float(r.relacao)
             if valor is not None:
                 relacoes_est.append(valor)
@@ -1195,7 +1216,7 @@ def dashboard_manutencao(request):
             "qtd_degradacoes": len(degradacoes_est),
         })
 
-# GRÁFICO DE TENDÊNCIA DE DEGRADAÇÃO
+    # GRÁFICO DE TENDÊNCIA DE DEGRADAÇÃO
     degradacao_datasets = []
 
     for item in circuitos_em_degradacao:
@@ -1239,7 +1260,7 @@ def dashboard_manutencao(request):
             "pointHoverRadius": 5,
             "tension": 0.35,
         })
-    
+
     context = {
         "lista_de_estacoes": lista_de_estacoes,
         "selected_estacao_id": str(estacao_id) if estacao_id else "",
@@ -1285,7 +1306,7 @@ def dashboard_manutencao(request):
         "total_degradacao_positiva": total_degradacao_positiva,
 
         "degradacao_datasets": json.dumps(degradacao_datasets),
-        
+
         "ultimos_tx": ultimos_tx,
         "ultimos_rx": ultimos_rx,
     }
