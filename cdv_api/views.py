@@ -183,7 +183,6 @@ def classificar_relacao(valor):
 
     return "Entre 60% e 80%", "relacao-normal"
 
-
 def identificar_via(circuito):
     circuito = (circuito or "").strip().upper()
 
