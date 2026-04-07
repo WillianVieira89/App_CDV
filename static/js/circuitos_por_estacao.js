@@ -1,10 +1,11 @@
 // static/js/circuitos_por_estacao.js
 // Edite este objeto: "Nome exato da estação" -> [lista de circuitos]
+
 window.CIRCUITOS_POR_ESTACAO = {
-  "Capão Redondo": [],
-  "Campo Limpo": [],
-  "Vila das Belezas": [],
-  "Giovanni Gronchi": [],
+  "Capão Redondo": ["1E19T","2E16T","1E20T","2E17T"],
+  "Campo Limpo": ["1E19T","2E16T","1E20T","2E17T"],
+  "Vila das Belezas": ["1E19T","2E16T","1E20T","2E17T"],
+  "Giovanni Gronchi": ["1E19T","2E16T","1E20T","2E17T"],
   "Santo Amaro": [
     "1E19T","2E16T","1E20T","2E17T",
     "2E18T","2E19T","2E20T","1E21AT",
@@ -19,7 +20,7 @@ window.CIRCUITOS_POR_ESTACAO = {
     "1E03T","1E31T","1E32T","2E28T","2E30T"
   ],
   "Alto da Boa Vista": [
-    "1W05T","1W04T","1E33",
+    "1W05T","1W04T","1E33T",
     "2E32T","2W04T","2E31T"
   ],
   "Borba Gato": [
@@ -27,8 +28,10 @@ window.CIRCUITOS_POR_ESTACAO = {
     "2W03T","2W01T","2W02T"
   ],
   "Brooklin": [
-    "2E02T","2E01T","2E03T","2E05T","1E05T"
+    "1E01T","1E02T","1E03T","1E04T","1E05T",
+    "2E01T","2E02T","2E03T","2E04T","2E05T"
   ],
+  "Campo Belo": [],
   "Eucaliptos": [
     "1E07T","1E08T","2E07T","2E08T",
     "1E09T","1E10T","3E01T","2E09T",
@@ -40,12 +43,14 @@ window.CIRCUITOS_POR_ESTACAO = {
     "1E16T","2E16T","1E17T","2E17T",
     "1E18T","2E18T","3E02T","4E02T"
   ],
-  "Hospital São-Paulo": [ 
+  "AACD Servidor": [],
+  "Hospital São Paulo": [
     "1E19T","1E20T","1E21T","1E22T","1E23T","1E24T","1E25T",
     "2E19T","2E20T","2E21T","2E22T","2E23T","2E24T","2E25T"
   ],
+  "Santa Cruz": [],
   "Chácara Klabin": [
     "1E26T","1E27T","1E28T","1E29T","1E30T","1E31T",
     "2E26T","2E27T","2E28T","2E29T","2E30T","2E31T"
-  ],
-}
+  ]
+};
